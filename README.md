@@ -31,6 +31,32 @@ your units' AI. You control your colony by writing JavaScript.
 - Simple automatic base building
 - Role switching accourding to base necessities
 - Auto road building to the main room landmarks
+- Remote Harvesting
+- Basic room defense
 
 ## Not Implemented yet
 
+### Roles
+- Miner
+- Wall/Rampart Repairer
+- AOE Soldier
+
+### Structures
+- Labs
+- Factory
+- Terminal
+
+### Features
+- Dynamic Base builder, including all structures
+- Base rebuilder
+- Better inter-room resource sharing
+- Mining and boosting
+- Market
+- Soldier Squads
+
+
+## To Do
+- Find a better code formatter
+- Incorporate new Javascript features
+- Figure out a way to integrate some profiler
+- Benchmark energy efficiency of different logistics models
