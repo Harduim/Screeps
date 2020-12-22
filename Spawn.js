@@ -33,7 +33,7 @@ Spawn.prototype.easySpawnCreep = function (creepRole, energyCap, bodyParts = fal
 
     var workPartFactor
     var carryPartFactor
-    if (this.room.memory.controller_road && this.room.memory.spawn_roads) {
+    if (false && this.room.memory.controller_road && this.room.memory.spawn_roads) {
         workPartFactor = 1.5
         carryPartFactor = 500
     } else {
@@ -49,19 +49,18 @@ Spawn.prototype.easySpawnCreep = function (creepRole, energyCap, bodyParts = fal
 
 
 Spawn.prototype.remoteHarvest = function (remotePos) {
-    let memory = this.memoryBuilder("rharv", remotePos)
+    const memory = this.memoryBuilder("rharv", remotePos)
     let energyCap = Math.ceil(this.room.energyCapacityAvailable * 0.75)
     energyCap = energyCap < this.room.memory.maxBasicSize ? energyCap : this.room.memory.maxBasicSize
-    let bodyPts = this.bodyBuilder(energyCap, 600)
+    const bodyPts = this.bodyBuilder(energyCap, 600)
     return this.easySpawnCreep("rharv", energyCap, bodyPts, memory)
 }
 
 
 Spawn.prototype.easySpawnFighter = function (creepRole, energyCap = 2000, squad = "000") {
-    // Game.spawns["Spawn1"].easySpawnFighter("grunt", 2300)
-    let toParts = creepRole == "shaman" ? 0 : Math.ceil(energyCap * 0.003)
-    let bodyParts = this.fighterBodyBuilder(creepRole, energyCap, toParts)
-    let memory = this.memoryBuilder(creepRole)
+    const toParts = creepRole == "shaman" ? 0 : Math.ceil(energyCap * 0.003)
+    const bodyParts = this.fighterBodyBuilder(creepRole, energyCap, toParts)
+    const memory = this.memoryBuilder(creepRole)
 
     return this.spawnCreep(bodyParts, `${creepRole}_${Game.time}_${squad}`, memory)
 }
@@ -78,35 +77,37 @@ Spawn.prototype.fighterBodyBuilder = function fighterBodyBuilder(role, energyCap
     HEAL			250:	Heals 12 hits per tick in short range or 4 hits per tick at a distance.
     TOUGH			10:		No effect, just additional hit points to the creep's body. Can be boosted to resist damage.
     */
-    let moveCost = 50
-    let workCost = 100
-    let attackCost = 80
-    let ranged_attackCost = 150
-    let healCost = 250
-    let toughCost = 10
 
-    let armyRoles = {
+    const moveCost = 50
+    const workCost = 100
+    const attackCost = 80
+    const ranged_attackCost = 150
+    const healCost = 250
+    const toughCost = 10
+
+    const armyRoles = {
         "shaman": [healCost, HEAL],
         "grunt": [attackCost, ATTACK],
         "hunter": [ranged_attackCost, RANGED_ATTACK],
         "demolisher": [workCost, WORK],
+        "tank": [attackCost, TOUGH],
     }
 
     let [roleCost, rolePart] = armyRoles[role];
-    let toughEnergy = toughCount * toughCost
+    const toughEnergy = toughCount * toughCost
     energyCap = energyCap - toughEnergy
 
-    let roleMainProp = Math.ceil(roleCost / moveCost)
-    let moveEnergy = energyCap / roleMainProp
-    let roleMainEnergy = energyCap - moveEnergy
+    const roleMainProp = Math.ceil(roleCost / moveCost)
+    const moveEnergy = energyCap / roleMainProp
+    const roleMainEnergy = energyCap - moveEnergy
 
-    let roleCount = Math.floor(roleMainEnergy / roleCost)
-    let moveCount = Math.floor(moveEnergy / moveCost)
+    const roleCount = Math.floor(roleMainEnergy / roleCost)
+    const moveCount = Math.floor(moveEnergy / moveCost)
     var bodyPts = []
 
     for (let i = 1; i <= toughCount; i++) { bodyPts = bodyPts.concat(TOUGH) }
-    for (let i = 1; i <= moveCount; i++) { bodyPts = bodyPts.concat(MOVE) }
     for (let i = 1; i <= roleCount; i++) { bodyPts = bodyPts.concat(rolePart) }
+    for (let i = 1; i <= moveCount; i++) { bodyPts = bodyPts.concat(MOVE) }
 
     return bodyPts
 }

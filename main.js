@@ -11,7 +11,7 @@ function every6000Ticks() {
     if (Game.time % 6000 != 0) { return }
     if (MYDEBUG) { console.log("Runnig 6000 Tks Maintenance") }
 
-    for (var name in Memory.creeps) {
+    for (let name in Memory.creeps) {
         if (!Game.creeps[name]) {
             delete Memory.creeps[name]
             if (MYDEBUG) { console.log('Clearing non-existing creep memory:', name) }
@@ -20,9 +20,9 @@ function every6000Ticks() {
 }
 
 
-function every400Ticks() {
-    if (Game.time % 400 != 0) { return }
-    if (MYDEBUG) { console.log("Runnig 400 Tks Maintenance") }
+function every300Ticks() {
+    if (Game.time % 300 != 0) { return }
+    if (MYDEBUG) { console.log("Runnig 300 Tks Maintenance") }
     balanceCreeps()
 }
 
@@ -33,9 +33,9 @@ function balanceCreeps() {
 
 
 module.exports.loop = function () {
-    _.forEach(Game.rooms, function (room) { room.run(MYDEBUG) })
-    _.forEach(Game.creeps, function (creep) { creep.run(MYDEBUG) })
+    _.invoke(Game.rooms, 'run', MYDEBUG)
+    _.invoke(Game.creeps, 'run', MYDEBUG)
 
-    every400Ticks()
+    every300Ticks()
     every6000Ticks()
 }

@@ -1,5 +1,5 @@
 Creep.prototype.roleArmy = function () {
-    let rallyPoint = Game.flags["point_" + this.name.split("_")[2]]
+    const rallyPoint = Game.flags["point_" + this.name.split("_")[2]]
 
     if (rallyPoint) {
         if (this.room.name != rallyPoint.pos.roomName) {
@@ -10,8 +10,9 @@ Creep.prototype.roleArmy = function () {
     switch (this.memory.role) {
         case 'shaman':
             return this.roleShaman()
-        case 'grunt':
-            return this.roleGrunt()
+            case 'grunt':
+                return this.roleGrunt()
+        case 'tank':
         case 'demolisher':
             return this.roleDemolisher()
         case 'hunter':
@@ -21,7 +22,7 @@ Creep.prototype.roleArmy = function () {
 
 
 Creep.prototype.roleGrunt = function () {
-    var tgt = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    let tgt = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
     if (!tgt) {
         tgt = this.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES);
     }
@@ -48,37 +49,29 @@ Creep.prototype.roleDemolisher = function () {
 
 Creep.prototype.roleShaman = function () {
     if (this.hits < (this.hitsMax * 0.8)) {
-        return this.heal(this)
+        this.heal(this)
     }
     let ARMYROLES = this.memory.ARMYROLES
-    let closestHurt = this.pos.findClosestByRange(
-        FIND_MY_CREEPS,
-        {
-            filter: function (creep) {
-                return ARMYROLES.includes(creep.memory.role) && creep.hits < creep.hitsMax
-            }
-        }
+    let closestHurt = this.pos.findClosestByRange(FIND_MY_CREEPS, {
+        filter: creep => ARMYROLES.includes(creep.memory.role) && creep.hits < creep.hitsMax
+    }
     )
     if (closestHurt) {
-        if (this.pos.inRangeTo(closestHurt, 1)) {
-            return this.heal(closestHurt)
-        }
-        else {
-            return this.moveTo(closestHurt)
+        if (this.pos.isNearTo(closestHurt)) {
+            this.heal(closestHurt)
+        } else {
+            this.rangedHeal(closestHurt)
         }
     }
+    this.moveTo(closestHurt)
 
     if (this.hits < this.hitsMax) {
-        return this.heal(this)
+        this.heal(this)
     }
     // temporário até criar formações
-    let closestAttacker = this.pos.findClosestByRange(
-        FIND_MY_CREEPS,
-        {
-            filter: function (creep) {
-                return ["demolisher", "grunt"].includes(creep.memory.role)
-            }
-        }
+    let closestAttacker = this.pos.findClosestByRange(FIND_MY_CREEPS, {
+        filter: creep => ["demolisher", "grunt"].includes(creep.memory.role)
+    }
     )
-    this.moveTo(closestAttacker)
+    return this.moveTo(closestAttacker)
 }

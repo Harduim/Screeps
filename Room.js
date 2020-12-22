@@ -1,8 +1,8 @@
 const MAXRHARV = 2
 const SMALLCARRYPTS = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE]
 const BIGCARRYPTS = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, CARRY, MOVE, CARRY, MOVE]
+const FREE_SPAWNS = { filter: spn => spn.spawning == null };
 
-function freeSpawns(spn) { return spn.spawning == null }
 
 Room.prototype.run = function run(MYDEBUG) {
     if (!this.controller || !this.controller.level || !this.controller.my) { return }
@@ -22,20 +22,242 @@ Room.prototype.run = function run(MYDEBUG) {
             this.seedRoom()
             break;
         case 3:
-            this.runStructs(STRUCTURE_TOWER)
             this.controllerRoadMaker()
+            this.runTowers()
             break;
         case 4:
-            this.runStructs(STRUCTURE_TOWER)
-            this.storageMaker()
-            break;
         case 5:
         case 6:
         case 7:
         case 8:
+            this.runTowers()
             this.teleportEnergy()
-            this.runStructs(STRUCTURE_TOWER)
             break;
+    }
+}
+
+
+Room.prototype.creepFilterByRole = function (role, creepList) {
+    return _.filter(creepList, crp => crp.memory.role == role);
+}
+
+Room.prototype.creepFilterByPrefix = function (prefix, creepList) {
+    return _.filter(creepList, crp => crp.name.split("_")[0] == prefix);
+}
+
+Room.prototype.roomCoordinator = function () {
+    if (this.MYDEBUG) {
+        console.log(`[${this.name}] Room coordenation`);
+    }
+    const hostiles = this.find(FIND_HOSTILE_CREEPS);
+    if (hostiles.length > 0) {
+        this.memory.underAttack = true
+    } else {
+        this.memory.underAttack = false
+    }
+    this.memory.hostiles = hostiles.length
+
+    const controllerId = this.controller.id;
+    const structs = this.find(FIND_MY_STRUCTURES);
+    const constSites = this.find(FIND_CONSTRUCTION_SITES);
+    const creepsOwned = _.filter(Game.creeps, creep => (
+        creep.memory.default_controller == controllerId && creep.name.split("_")[0] != "seed"
+    ));
+
+    this.census(creepsOwned);
+    this.runSpawns();
+    this.structureCensus(structs);
+    this.buffLinkerDirectives(creepsOwned, structs);
+    this.harvUpgrBuilDirectives(creepsOwned, constSites);
+    if (this.energyAvailable == this.energyCapacityAvailable) {
+        this.remoteHarvest()
+    }
+}
+
+
+Room.prototype.census = function (creepsOwned) {
+    this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role);
+    this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split("_")[0]);
+
+    if (this.memory.MYDEBUG) {
+        console.log(`[${this.name}] Census =>:${JSON.stringify(this.memory.censusByPrefix)}`);
+    }
+
+    if (this.energyCapacityAvailable < 1800) {
+        this.memory.harvMax = this.memory.sourcesCount + 2
+        this.memory.upgrMax = this.memory.sourcesCount
+        this.memory.builMax = this.memory.sourcesCount + 1
+        this.memory.maxBasicSize = 1600;
+    } else {
+        this.memory.harvMax = this.memory.sourcesCount
+        this.memory.upgrMax = 1
+        this.memory.builMax = 1
+        this.memory.maxBasicSize = 2200;
+    }
+
+    if (this.name == "sim") {
+        this.memory.harvMax = 3;
+        this.memory.upgrMax = 2;
+    }
+}
+
+
+Room.prototype.structureCensus = function (structs) {
+    const mStorage = this.storage;
+
+    // Link cache
+    if ((!this.memory.mainLink || !Game.getObjectById(this.memory.mainLink.id)) && mStorage) {
+        const mlFilter = strc => strc.structureType == STRUCTURE_LINK && strc.pos.inRangeTo(mStorage, 5);
+        const mLink = _.filter(structs, mlFilter);
+        if (mLink.length > 0) {
+            this.memory.mainLink = mLink[0];
+        }
+    }
+    if (mStorage) {
+        const blFilter = strc => strc.structureType == STRUCTURE_LINK && !strc.pos.inRangeTo(mStorage, 5);
+        this.memory.borderLinks = _.filter(structs, blFilter);
+    }
+
+}
+
+
+Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
+    /*  ---------- Linker <=> Buff ---------
+        - If all links are empty or on cooldown Linker should assume Buff role.
+        - If there is no Buff, a Linker should assume the Buff role.
+        - If there a Linker on the buff role and Buff exists Linker should switch back to linker role.
+    */
+    if ((this.memory.censusByRole["linker"] || 0) == 0 || !this.storage) { return }
+
+    if ((this.memory.censusByRole["buff"] || 0) == 0) {
+        const linker = this.creepFilterByRole("linker", creepsOwned)[0];
+        linker.memory.role = "buff"
+        if (this.memory.MYDEBUG) { console.log(`[${this.name}] ${linker.name} => buff`); }
+        return
+    }
+
+    const linksActive = strc => strc.structureType == STRUCTURE_LINK && strc.store.energy > 0 && strc.cooldown <= 5;
+
+    if ((this.memory.censusByRole["buff"] || 0) > 0 && _.filter(structs, linksActive).length > 0) {
+        const linkersBuff = _.filter(
+            creepsOwned, crp => crp.memory.role == "buff" && crp.name.split("_")[0] == "linker"
+        );
+        if (linkersBuff.length > 0) {
+            linkersBuff[0].memory.role = "buff"
+            if (this.memory.MYDEBUG) { console.log(`[${this.name}] ${linkersBuff[0].name} => linker`); }
+        }
+    }
+}
+
+
+Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
+    /*  ---------- Harvester <=> [Builder, Upgr, Supgr]
+        - Should only switch role if:
+            - Room energy available == capacity or;
+            - There is a Buff and room.store has been filled to at least double room capacity or.
+        - Only one should switch to Builder if there is a construction site
+        - Should switch to Upgr or Supgr (depending if room.storage exists) if no sources available
+    */
+    const rHarvs = this.creepFilterByRole("harv", creepsOwned);
+    const pHarvs = this.creepFilterByPrefix("harv", creepsOwned);
+    let balance = false;
+    if (this.storage) {
+        if ((this.memory.censusByRole["buff"] || 0) == 0) {
+            balance = true;
+        }
+    } else {
+        if (this.energyAvailable < this.energyCapacityAvailable) {
+            balance = true;
+        }
+    }
+    if (balance) {
+        _.forEach(pHarvs, harv => harv.memory.role = "harv");
+        return
+    }
+
+    const buildCount = this.memory.censusByRole["buil"] || 0;
+    if (this.storage) {
+        const storageUsedCapacity = this.storage.store.getUsedCapacity(RESOURCE_ENERGY);
+        if (storageUsedCapacity < this.energyCapacityAvailable || buildCount > 0) {
+            return
+        }
+    }
+
+    // Harv => Builder
+    if (constSites.length > 0 && buildCount < this.memory.builMax) {
+        let builder;
+        const harvs = rHarvs.length == 0 ? pHarvs : rHarvs;
+        if (harvs.length > 0) {
+            builder = harvs[0];
+            builder.memory.role = "buil"
+            if (this.memory.MYDEBUG) { console.log(`[${this.name}] ${builder.name} => buil`); }
+            return
+        }
+    }
+    // Builder => Harv will remain on .goBuild and main.balanceCreeps
+
+    // Harv => Upgr
+    if (this.energyAvailable == this.energyCapacityAvailable &&
+        (!this.storage || this.find(FIND_SOURCES_ACTIVE).length == 0)) {
+        _.forEach(rHarvs, harv => harv.memory.role = "upgr");
+        return
+    }
+    // Upgr => Harv will remain on .roleUpgrader and main.balanceCreeps
+
+}
+
+
+
+Room.prototype.runTowers = function () {
+    const structs = this.find(FIND_STRUCTURES);
+    let towers = _.filter(structs, struc => struc.structureType == STRUCTURE_TOWER);
+
+    if (towers.length == 0) { return }
+
+    let mainSpawn = _.filter(structs,
+        struc => struc.structureType == STRUCTURE_SPAWN && struc.memory.hasOwnProperty("main")
+    );
+    if (mainSpawn.length == 0) {
+        // Fallback to individual tower logic
+        _.forEach(towers, tower => tower.run())
+        return
+    }
+    mainSpawn = mainSpawn[0]
+
+    // definir limite maximo de ataque, assim as torres vao reparar os muros e ramparts
+    const hostile = mainSpawn.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
+    if (hostile) {
+        _.forEach(towers, tower => tower.attack(hostile))
+        return
+    }
+
+    if (Game.time % 2 == 0) {
+        const closestMyCreep = mainSpawn.pos.findClosestByRange(FIND_MY_CREEPS, {
+            filter: (creep) => creep.hits < creep.hitsMax
+        })
+        if (closestMyCreep && mainSpawn.pos.getRangeTo(closestMyCreep) < 20) {
+            _.forEach(towers, tower => tower.heal(closestMyCreep))
+            return
+        }
+    }
+
+    if (Game.time % 10 == 0) {
+        const strucWallRampart = [STRUCTURE_WALL, STRUCTURE_RAMPART]
+        const lessHits = obj => _.reduce(obj, (a, b) => a.hits <= b.hits ? a : b);
+
+        const nonWallDamaged = _.filter(structs, struc => !strucWallRampart.includes(struc.structureType) && struc.hits < struc.hitsMax);
+        if (nonWallDamaged.length > 0) {
+            let tower = towers.pop()
+            tower.repair(lessHits(nonWallDamaged))
+        }
+
+        if (towers.length == 0 || !(this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 30000)) {
+            return
+        }
+
+        let damaged = _.filter(structs, struc => strucWallRampart.includes(struc.structureType) && struc.hits < struc.hitsMax);
+        const target = lessHits(damaged)
+        if (damaged.length > 0) { _.forEach(towers, tower => tower.repair(target)) }
     }
 }
 
@@ -47,19 +269,16 @@ Room.prototype.runStructs = function runStructs(strucType) {
 
 
 Room.prototype.teleportEnergy = function () {
-    if (!this.storage || Game.time % 5 != 0) { return }
+    if (!this.storage || Game.time % 5 != 0 || !this.memory.mainLink) { return }
 
-    let links = this.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_LINK } })
-    if (links.length == 0) { return }
+    const mLink = Game.getObjectById(this.memory.mainLink.id);
 
-    let roomStorage = this.storage
-    let borderLinks = _.filter(links, function (lnk) { return !lnk.pos.inRangeTo(roomStorage, 5) })
-    if (borderLinks.length == links.length) { return }
-    let mainLink = _.filter(links, function (lnk) { return lnk.pos.inRangeTo(roomStorage, 5) })[0]
-
-    _.forEach(borderLinks, function (lnk) {
-        if (lnk.cooldown > 0) { return }
-        lnk.transferEnergy(mainLink)
+    _.forEach(this.memory.borderLinks, function (lnk) {
+        if (lnk.cooldown > 0 || mLink.store.energy >= 770) { return }
+        const bLink = Game.getObjectById(lnk.id);
+        if (bLink) {
+            bLink.transferEnergy(mLink)
+        }
     })
 
 }
@@ -88,29 +307,29 @@ Room.prototype.controllerRoadMaker = function () {
 }
 
 Room.prototype.seedRoom = function () {
-    if (!this.controller.my || this.memory.basicCount > 1) {
+    if (!this.controller || !this.controller.my || this.memory.basicCount > 0) {
         return
     }
 
-    let controllerId = this.controller.id
-    let mycreepsHere = _.filter(Game.creeps, function (creep) {
+    const controllerId = this.controller.id
+    const mycreepsHere = _.filter(Game.creeps, function (creep) {
         return creep.memory.default_controller == controllerId
     });
-    let seedCount = this.creepCounter('seed', mycreepsHere)
+    let seedCount = this.creepCounterByPrefix('seed', mycreepsHere)
     if (seedCount > 4) { return }
 
-    for (var name in Game.rooms) {
+    for (let name in Game.rooms) {
         var otherRoom = Game.rooms[name]
-        if ((!otherRoom.controller.my) || (this.name == otherRoom.name)) {
+        if ((!otherRoom.controller) || (!otherRoom.controller.my) || (this.name == otherRoom.name)) {
             continue
         }
         break;
     }
-    let otherSpawns = otherRoom.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let otherSpawns = otherRoom.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     if (otherSpawns.length == 0) { return }
 
     let seedingResult = otherSpawns[0].spawnCreep(
-        [TOUGH, CARRY, MOVE, MOVE, MOVE, WORK, MOVE, MOVE, CARRY, WORK],
+        [TOUGH, CARRY, MOVE, MOVE, MOVE, WORK, MOVE, MOVE, MOVE, WORK, CARRY, WORK, MOVE, WORK],
         "seed_" + Game.time + "_400", {
         memory: {
             role: "upgr",
@@ -118,7 +337,7 @@ Room.prototype.seedRoom = function () {
         }
     }
     )
-    console.log("seeding spawn result: " + seedingResult)
+    console.log(`${this.name} Seeding => ${otherRoom.name} | Spawn Result:${seedingResult}`)
 
 }
 
@@ -132,7 +351,7 @@ Room.prototype.maintainClaim = function () {
     )
     if (!desiredRoom) { return }
 
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     _.forEach(desiredRoom, function (src) {
         var reserver = _.filter(Game.creeps, function (creep) {
             return creep.memory.remotePos &&
@@ -146,12 +365,12 @@ Room.prototype.maintainClaim = function () {
         console.log(`[${roomName}] Reserver ${src} => ${reserver}`)
         if (reserver >= 1) { return }
 
-        spawns = _.filter(spawns, freeSpawns)
+        spawns = _.filter(spawns, snp => snp.spawning == null)
         if (spawns.length == 0) { return }
         let spawn = spawns[0]
         console.log(`[${roomName}] ${src} Count:${reserver} of 1 Spawning reserver`)
         let memory = spawn.memoryBuilder("claim", src)
-        spawn.spawnCreep([MOVE, MOVE, CLAIM, CLAIM], `claim_${Game.time}_700`, memory)
+        spawn.spawnCreep([TOUGHT, MOVE, MOVE, MOVE, MOVE, CLAIM, CLAIM], `claim_${Game.time}_700`, memory)
     }
     )
 }
@@ -169,7 +388,7 @@ Room.prototype.remoteHarvest = function () {
 
     remoteSources = _.sortBy(remoteSources, "name")
 
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     _.forEach(remoteSources, function (src) {
         var remoteHarver = _.filter(Game.creeps, function (creep) {
             return creep.memory.remotePos &&
@@ -183,7 +402,7 @@ Room.prototype.remoteHarvest = function () {
         console.log(`[${roomName}] Remote ${src} => ${remoteHarver}`)
         if (remoteHarver >= MAXRHARV) { return }
 
-        spawns = _.filter(spawns, freeSpawns)
+        spawns = _.filter(spawns, snp => snp.spawning == null)
         if (spawns.length == 0) { return }
         let spawn = spawns[0]
         console.log(`[${roomName}] ${src} Count:${remoteHarver} of ${MAXRHARV} Spawning new`)
@@ -203,7 +422,7 @@ Room.prototype.maintainEuroTruck = function () {
     )
     if (!remoteStorages) { return }
 
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     _.forEach(remoteStorages, function (src) {
         var truck = _.filter(Game.creeps, function (creep) {
             return creep.memory.remotePos &&
@@ -216,7 +435,7 @@ Room.prototype.maintainEuroTruck = function () {
         console.log(`[${roomName}] Truck ${src} => ${truck}`)
         if (truck >= 1) { return }
 
-        spawns = _.filter(spawns, freeSpawns)
+        spawns = _.filter(spawns, snp => snp.spawning == null)
         if (spawns.length == 0) { return }
         let spawn = spawns[0]
         let memory = {
@@ -239,17 +458,16 @@ Room.prototype.maintainEuroTruck = function () {
 Room.prototype.maintainLinker = function () {
     if (!this.storage ||
         !this.controller ||
-        this.memory.linkerCount > 0 ||
+        (this.memory.censusByPrefix["linker"] || 0) > 0 ||
         this.controller.level < 5 ||
-        this.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 2000 ||
         this.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_LINK } }).length == 0
     ) {
         return
     }
 
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     if (spawns.length == 0) { return }
-    let spawn = spawns[0]
+    const spawn = spawns[0]
     return spawn.easySpawnCreep("linker", 600, SMALLCARRYPTS)
 }
 
@@ -257,13 +475,13 @@ Room.prototype.maintainLinker = function () {
 Room.prototype.maintainBuff = function maintainBuff() {
     if (!this.storage ||
         !this.controller ||
-        this.storage.store.getUsedCapacity(RESOURCE_ENERGY) == 0 ||
-        this.memory.buffCount > 0
+        (this.memory.censusByPrefix["buff"] || 0) > 0 ||
+        (this.storage.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && (this.memory.censusByPrefix["linker"] || 0) == 0)
     ) {
         return
     }
 
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     if (spawns.length == 0) { return }
     let spawn = spawns[0]
     var buffPts = SMALLCARRYPTS
@@ -278,12 +496,12 @@ Room.prototype.maintainSuperUpgrader = function maintainSuperUpgrader() {
     if (!this.storage ||
         !this.controller ||
         this.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 50000 ||
-        this.memory.suCount >= 1
+        (this.memory.censusByPrefix["supgr"] || 0) >= 1
     ) {
         return
     }
 
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     if (spawns.length == 0) { return }
     let spawn = spawns[0]
 
@@ -292,7 +510,7 @@ Room.prototype.maintainSuperUpgrader = function maintainSuperUpgrader() {
 
 
 Room.prototype.maintainMigr = function () {
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     if (spawns.length == 0) { return }
     let spawn = spawns[0]
 
@@ -305,30 +523,21 @@ Room.prototype.maintainMigr = function () {
 
 
 Room.prototype.runSpawns = function () {
-    if (this.memory.basicCount == null) {
-        this.census()
-    }
-
-    if (this.memory.basicCount >= this.memory.maxBasicCreeps) {
-        if (this.energyAvailable == this.energyCapacityAvailable) {
-            return this.remoteHarvest()
-        }
-        return
-    }
-
-    let spawns = this.find(FIND_MY_SPAWNS, { filter: freeSpawns })
+    const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     if (spawns.length == 0) { return }
-    let spawn = spawns[0]
-    let minEnergy = this.energyAvailable > 300 ? this.energyAvailable : 300
+    const spawn = spawns[0]
+    const minEnergy = this.energyAvailable > 300 ? this.energyAvailable : 300
+    const harvCount = this.memory.censusByPrefix["harv"] || 0;
+    const upgrCount = this.memory.censusByPrefix["upgr"] || 0;
 
     switch (true) {
-        case (this.memory.harvCount == 0):
+        case (harvCount == 0):
             return spawn.easySpawnCreep('harv', minEnergy);
 
-        case (this.memory.harvCount < this.memory.harvMax):
+        case (harvCount < this.memory.harvMax):
             return spawn.easySpawnCreep('harv', this.energyCapacityAvailable);
 
-        case (this.memory.upgrCount < this.memory.upgrMax):
+        case (upgrCount < this.memory.upgrMax):
             if (this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) == 0) {
                 return spawn.easySpawnCreep('upgr', minEnergy);
             }
@@ -337,51 +546,25 @@ Room.prototype.runSpawns = function () {
 }
 
 
-Room.prototype.creepCounter = function creepCounter(creepRole, creeps) {
-    return _.size(_.filter(creeps, function (crp) { return crp.name.split("_")[0] == creepRole }))
-}
-
-
-Room.prototype.census = function () {
-    let controllerId = this.controller.id
-    let mycreepsHere = _.filter(Game.creeps, function (creep) {
-        return (creep.memory.default_controller == controllerId) && (creep.name.split("_")[0] != "seed")
-    });
-    this.memory.harvCount = this.creepCounter('harv', mycreepsHere)
-    this.memory.upgrCount = this.creepCounter('upgr', mycreepsHere)
-    this.memory.buffCount = this.creepCounter('buff', mycreepsHere)
-    this.memory.suCount = this.creepCounter('supgr', mycreepsHere)
-    this.memory.linkerCount = this.creepCounter('linker', mycreepsHere)
-    this.memory.basicCount = this.memory.upgrCount + this.memory.harvCount
-
-    if (this.energyCapacityAvailable < 1800) {
-        this.memory.maxBasicCreeps = this.memory.sourcesCount * 3
-        this.memory.maxBasicSize = 1600
-    } else {
-        this.memory.maxBasicCreeps = (this.memory.sourcesCount * 1) + 2
-        this.memory.maxBasicCreeps = this.memory.maxBasicCreeps < 3 ? 3 : this.memory.maxBasicCreeps
-        this.memory.maxBasicSize = 2200
-    }
-
-    this.memory.upgrMax = 1
-    this.memory.harvMax = this.memory.maxBasicCreeps - this.memory.upgrMax
-
-    if (this.memory.MYDEBUG) {
-        console.log("===")
-        console.log(`[${this.name}] Census Basics:${this.memory.basicCount} of ${this.memory.maxBasicCreeps} `)
-        console.log(`[${this.name}] Census Harv:${this.memory.harvCount} of ${this.memory.harvMax} Upgr:${this.memory.upgrCount} of ${this.memory.upgrMax}`)
-        console.log(`[${this.name}] Census Supgr:${this.memory.suCount}`)
-    }
-}
-
-
 Room.prototype.every15Ticks = function () {
     if (Game.time % 15 != 0) { return }
 
-    this.census()
-    this.runSpawns()
-    this.seedRoom()
+    const enemyCreeps = this.find(FIND_CREEPS, {
+        filter: (crp) => !crp.my &&
+            crp.owner.username != 'Invader' &&
+            (crp.getActiveBodyparts(ATTACK) > 0 || crp.getActiveBodyparts(RANGED_ATTACK) > 0)
+    })
+    if (enemyCreeps.length > 0) {
+        const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS);
+        const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200;
+        this.createFlag(25, 25, "point_999");
+        _.forEach(spawns, function (spn) { spn.easySpawnFighter("grunt", energyCap, 999) });
+        this.controller.activateSafeMode()
+    }
+
+    this.roomCoordinator()
     this.maintainBuff()
+    this.maintainLinker()
     this.maintainEuroTruck()
     this.maintainSuperUpgrader()
     this.towerMaker()
@@ -392,9 +575,6 @@ Room.prototype.every15Ticks = function () {
 Room.prototype.every50Ticks = function () {
     if (Game.time % 50 != 0) { return }
     console.log("Running 50 tks maintenance")
-
-    this.census()
-    this.maintainLinker()
 }
 
 
@@ -427,6 +607,7 @@ Room.prototype.roadMaker = function () {
 
 
     let spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
+    if (!spawn) { return }
     console.log(`[${this.name}] RoadMaker spawn:${spawn}`)
     let sources = this.find(FIND_SOURCES)
     for (let src in sources) {
@@ -467,6 +648,7 @@ Room.prototype.towerMaker = function () {
     }[towerNum]
 
     let spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
+    if (!spawn) { return }
     let coordX = spawn.pos.x
     let coordY = spawn.pos.y
     let [offsetX, offsetY] = towerOffets
@@ -551,6 +733,7 @@ Room.prototype.extencionMaker = function () {
     if (extencionsMax == extsNum) { return }
 
     let spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
+    if (!spawn) { return }
     let coordX = spawn.pos.x
     let coordY = spawn.pos.y
     let [offsetX, offsetY] = extensionOffsetFinder(extsNum)

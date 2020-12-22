@@ -12,13 +12,21 @@ Creep.prototype.run = function (MYDEBUG) {
     }
     this.memory.MYDEBUG = MYDEBUG
 
-    let ARMYROLES = ["shaman", "grunt", "hunter", "demolisher"]
+    const ARMYROLES = ["shaman", "grunt", "hunter", "demolisher", "tank"]
     if (ARMYROLES.includes(this.memory.role)) {
         this.memory.ARMYROLES = ARMYROLES
         return this.roleArmy()
     }
 
-    // Tem que virar um map
+    if (this.memory.relocate) {
+        const rallyPoint = Game.flags["reloc"]
+        if (rallyPoint) {
+            if (this.room.name != rallyPoint.pos.roomName) {
+                return this.moveTo(rallyPoint)
+            }
+            this.memory.relocate = false
+        }
+    }
     switch (this.memory.role) {
         case 'buil':
             return this.roleBuilder()
@@ -44,47 +52,53 @@ Creep.prototype.run = function (MYDEBUG) {
             return this.roleEuroTruck()
         case "linker":
             return this.roleLinker()
+        case "grave":
+            return this.roleGrave()
     }
 }
 
+function allowedStorages(storages) {
+    return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+}
+
+Creep.prototype.roleGrave = function () {
+    if (this.memory.harvesting) {
+        return this.goHarvest(FIND_DROPPED_RESOURCES)
+    }
+    return this.goDeposit()
+}
 
 Creep.prototype.roleLinker = function () {
-    let links = this.room.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_LINK } })
-    if (links.length == 0) { return }
-
     if (this.store.getUsedCapacity(RESOURCE_ENERGY) > 0 || this.memory.harvesting == false) {
-        return this.goDeposit(function (structure) {
-            let allowedStorages = [STRUCTURE_STORAGE, STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER]
-            return allowedStorages.includes(structure.structureType) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        })
+        const storages = [STRUCTURE_STORAGE, STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER]
+        return this.goDeposit(allowedStorages(storages));
     }
 
-    let roomStorage = this.room.storage
-    let mainLink = _.filter(links, function (lnk) { return lnk.pos.inRangeTo(roomStorage, 5) })[0]
-    if (!this.pos.inRangeTo(mainLink, 1)) {
-        this.moveTo(mainLink, REUSEPATHARGS)
-    }
-    else {
-        let result = this.withdraw(mainLink, RESOURCE_ENERGY)
-        if (result == ERR_NOT_ENOUGH_RESOURCES) {
-            this.memory.role = "buff"
-        }
+    if (!this.room.memory.mainLink) { return }
+    const mLink = Game.getObjectById(this.room.memory.mainLink.id);
+    if (!mLink) { return }
+
+    if (!this.pos.isNearTo(mLink)) {
+        return this.moveTo(mLink, REUSEPATHARGS)
+    } else {
+        return this.withdraw(mLink, RESOURCE_ENERGY)
     }
 }
 
 
 Creep.prototype.roleBuff = function () {
-    if (this.name.split("_")[0] == "linker" && Game.time % 25 == 0) {
-        this.memory.role = "linker"
+    if (Game.time % 30 == 0 && this.name.split("_")[0] == "linker") {
+        this.memory.role = "linker";
+        return this.roleLinker()
     }
-    if (this.store.getFreeCapacity() == 0 || this.memory.harvesting == false) {
+
+    if (this.store.getUsedCapacity() > 0 || this.memory.harvesting == false) {
         this.memory.goingTo = false
-        return this.goDeposit(function (structure) {
-            let allowedStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER]
-            return allowedStorages.includes(structure.structureType) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        })
+        const energyFull = this.room.energyAvailable == this.room.energyCapacityAvailable;
+        const storages = energyFull ? [STRUCTURE_TOWER] : [STRUCTURE_EXTENSION, STRUCTURE_SPAWN];
+        return this.goDeposit(allowedStorages(storages));
     } else {
-        return this.goWithdraw()
+        return this.goWithdraw();
     }
 }
 
@@ -109,6 +123,7 @@ Creep.prototype.roleMigrate = function () {
     }
 
     if (this.store.getFreeCapacity() == 0) {
+        this.memory.role = this.name.split("_")[0]
         return this.transfer(this.room.storage, RESOURCE_ENERGY)
     }
     return this.withdraw(this.room.storage, RESOURCE_ENERGY)
@@ -125,6 +140,8 @@ Creep.prototype.roleClaimer = function () {
 
     if (this.room.controller.reservation && this.room.controller.reservation.username != 'Harduim') {
         return this.attackController(this.room.controller)
+    } else if (!this.room.controller.my && !this.room.controller.reservation) {
+        return this.attackController(this.room.controller)
     } else {
         return this.reserveController(this.room.controller)
     }
@@ -137,6 +154,7 @@ Creep.prototype.roleRemoteHarvester = function () {
     if (!remotePos) { return }
 
     if (this.room.find(FIND_HOSTILE_CREEPS).length > 0 || this.hits < this.hitsMax) {
+        this.memory.role = "supgr"
         return this.moveTo(Game.getObjectById(this.memory.default_spawn))
     }
 
@@ -159,7 +177,7 @@ Creep.prototype.roleRemoteHarvester = function () {
             return this.goBuild()
         }
         let closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (structure) => structure.hits < structure.hitsMax
+            filter: (strc) => strc.structure == STRUCTURE_ROAD && strc.hits < strc.hitsMax
         })
         if (closestDamagedStructure && this.pos.inRangeTo(closestDamagedStructure, 3)) {
             this.repair(closestDamagedStructure)
@@ -177,21 +195,34 @@ Creep.prototype.roleRemoteHarvester = function () {
 
 
 Creep.prototype.roleHarvester = function () {
-    let constructSite = this.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-    if ((this.room.memory.buffCount && constructSite) ||
-        (this.room.energyAvailable == this.room.energyCapacityAvailable && constructSite)) {
-        this.memory.role = 'buil'
-        return this.roleBuilder()
-    }
-    if (this.store.getFreeCapacity() > 0 && this.memory.harvesting == true) {
+    if (this.memory.harvesting) {
         return this.goHarvest()
     }
+
+    if (Game.time % 15 == 0) {
+        const closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: strc => strc.hits < strc.hitsMax && ![STRUCTURE_WALL, STRUCTURE_RAMPART].includes(strc.structureType)
+        })
+        if (closestDamagedStructure && this.pos.inRangeTo(closestDamagedStructure, 3)) {
+            this.repair(closestDamagedStructure)
+        }
+    }
+
+    if (!this.memory.goingTo) {
+        const closeLink = this.pos.findInRange(FIND_MY_STRUCTURES, 2, {
+            filter: strc => (strc.structureType == STRUCTURE_LINK && strc.store.energy < 795)
+        });
+
+        if (closeLink.length > 0 && (this.room.memory.censusByPrefix["linker"] || 0) > 0) {
+            this.memory.goingTo = closeLink[0].id;
+        }
+    }
+
     return this.goDeposit()
 }
 
-
 function storageFilter(structure) {
-    if ((structure.room.energyAvailable == structure.room.energyCapacityAvailable) && !structure.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)) {
+    if (structure.room.energyAvailable == structure.room.energyCapacityAvailable) {
         var allowedStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER, STRUCTURE_STORAGE]
     }
     else {
@@ -228,6 +259,11 @@ Creep.prototype.roleBuilder = function () {
 
 
 Creep.prototype.roleSUpgrader = function () {
+    const originalRole = this.name.split("_")[0]
+    if (Game.time % 15 == 0 && originalRole != "supgr" && this.store[RESOURCE_ENERGY] == 0) {
+        this.memory.role = originalRole
+        return
+    }
     if (this.memory.upgrading && this.store[RESOURCE_ENERGY] == 0) {
         this.memory.upgrading = false;
     }
@@ -247,6 +283,11 @@ Creep.prototype.roleSUpgrader = function () {
 
 
 Creep.prototype.roleUpgrader = function () {
+    const originalRole = this.name.split("_")[0]
+    if (Game.time % 5 == 0 && originalRole != "upgr" && this.store[RESOURCE_ENERGY] == 0) {
+        this.memory.role = originalRole
+        return
+    }
     if (this.memory.upgrading && this.store[RESOURCE_ENERGY] == 0) {
         this.memory.upgrading = false;
     }
@@ -261,7 +302,7 @@ Creep.prototype.roleUpgrader = function () {
         }
         return
     }
-    if (!this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 300000) {
+    if (originalRole != 'upgr' || !this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 150000) {
         return this.goHarvest()
     }
     return this.goWithdraw()
@@ -276,11 +317,11 @@ Creep.prototype.goDeposit = function (storFilter = storageFilter) {
 
     var energyStorage = Game.getObjectById(this.memory.goingTo)
     if (!energyStorage) {
-        if (this.room.memory.buffCount > 0 && !["buff", "rharv"].includes(this.memory.role)) {
+        if ((this.room.memory.censusByPrefix["buff"] || 0) > 0 && !["buff", "rharv"].includes(this.memory.role)) {
             energyStorage = this.room.storage
         } else {
             let targets = this.room.find(FIND_MY_STRUCTURES, { filter: storFilter });
-            if (targets.length == 0) { return }
+            if (targets.length == 0) { return ERR_INVALID_TARGET }
             energyStorage = this.pos.findClosestByRange(targets)
             this.memory.goingTo = energyStorage.id
         }
@@ -306,7 +347,7 @@ Creep.prototype.goHarvest = function (findType = FIND_SOURCES_ACTIVE) {
             this.memory.goingTo = goingTo.id
         }
         else {
-            return
+            return ERR_INVALID_TARGET
         }
     }
     let energySource = Game.getObjectById(this.memory.goingTo)

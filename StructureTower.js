@@ -1,19 +1,19 @@
 StructureTower.prototype.run = function run () {
-    let closestHostile = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
-    if (closestHostile) {
+    const closestHostile = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
+    if (closestHostile && this.pos.getRangeTo(closestHostile) < 25) {
         return this.attack(closestHostile)
     }
 
-    let closestMyCreep = this.pos.findClosestByRange(FIND_MY_CREEPS, {
-        filter: (creep) => creep.hits < creep.hitsMax
+    const closestMyCreep = this.pos.findClosestByRange(FIND_MY_CREEPS, {
+        filter: (creep) => creep.hits < creep.hitsMax 
     })
-    if (closestMyCreep && Game.time % 2 == 0) {
+    if (closestMyCreep && Game.time % 2 == 0 && this.pos.getRangeTo(closestMyCreep) < 20 ) {
         return this.heal(closestMyCreep)
     }
-    let closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-        filter: (structure) => (structure.hits < structure.hitsMax) && structure.structureType != STRUCTURE_WALL
+    const closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
+        filter: (structure) => (structure.hits < structure.hitsMax) && (structure.hits <= 40000) 
     })
-    if (closestDamagedStructure && Game.time % 4 == 0) {
+    if (closestDamagedStructure && Game.time % 5 == 0) {
         return this.repair(closestDamagedStructure)
     }
 }
