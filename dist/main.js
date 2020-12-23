@@ -3,18 +3,18 @@ require('Spawn');
 require('Creep');
 require('StructureTower');
 
-
-const MYDEBUG = true;
+const Logger = require('logger');
 
 
 function every6000Ticks() {
     if (Game.time % 6000 != 0) { return }
-    if (MYDEBUG) { console.log("Runnig 6000 Tks Maintenance") }
+    Logger.log('Extremely low bucket - aborting script run at start of loop', LOG_INFO)
 
-    for (let name in Memory.creeps) {
+    console.log('Clearing non-existing creep memory:', name)
+    let name
+    for (name in Memory.creeps) {
         if (!Game.creeps[name]) {
             delete Memory.creeps[name]
-            if (MYDEBUG) { console.log('Clearing non-existing creep memory:', name) }
         }
     }
 }
@@ -22,7 +22,7 @@ function every6000Ticks() {
 
 function every300Ticks() {
     if (Game.time % 300 != 0) { return }
-    if (MYDEBUG) { console.log("Runnig 300 Tks Maintenance") }
+    console.log("Runnig 300 Tks Maintenance")
     balanceCreeps()
 }
 
@@ -33,8 +33,16 @@ function balanceCreeps() {
 
 
 module.exports.loop = function () {
-    _.invoke(Game.rooms, 'run', MYDEBUG)
-    _.invoke(Game.creeps, 'run', MYDEBUG)
+    const logr = new Logger()
+    global.log = logr.log
+
+    if (Game.cpu.bucket < 500) {
+        logr.log('Extremely low bucket - skipping loop', LOG_FATAL, "GENERAL")
+        return
+    }
+
+    _.invoke(Game.rooms, 'run')
+    _.invoke(Game.creeps, 'run')
 
     every300Ticks()
     every6000Ticks()

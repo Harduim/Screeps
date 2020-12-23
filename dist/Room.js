@@ -4,9 +4,9 @@ const BIGCARRYPTS = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOV
 const FREE_SPAWNS = { filter: spn => spn.spawning == null };
 
 
-Room.prototype.run = function run(MYDEBUG) {
+Room.prototype.run = function run() {
     if (!this.controller || !this.controller.level || !this.controller.my) { return }
-    this.memory.MYDEBUG = MYDEBUG
+
     this.memory.sourcesCount = this.memory.sourcesCount || this.find(FIND_SOURCES).length
     this.every1000Ticks()
     this.every500Ticks()
@@ -46,9 +46,6 @@ Room.prototype.creepFilterByPrefix = function (prefix, creepList) {
 }
 
 Room.prototype.roomCoordinator = function () {
-    if (this.MYDEBUG) {
-        console.log(`[${this.name}] Room coordenation`);
-    }
     const hostiles = this.find(FIND_HOSTILE_CREEPS);
     if (hostiles.length > 0) {
         this.memory.underAttack = true
@@ -79,9 +76,7 @@ Room.prototype.census = function (creepsOwned) {
     this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role);
     this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split("_")[0]);
 
-    if (this.memory.MYDEBUG) {
-        console.log(`[${this.name}] Census =>:${JSON.stringify(this.memory.censusByPrefix)}`);
-    }
+    console.log(`[${this.name}] Census =>:${JSON.stringify(this.memory.censusByPrefix)}`);
 
     if (this.energyCapacityAvailable < 1800) {
         this.memory.harvMax = this.memory.sourcesCount + 2
@@ -132,7 +127,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
     if ((this.memory.censusByRole["buff"] || 0) == 0) {
         const linker = this.creepFilterByRole("linker", creepsOwned)[0];
         linker.memory.role = "buff"
-        if (this.memory.MYDEBUG) { console.log(`[${this.name}] ${linker.name} => buff`); }
+        console.log(`[${this.name}] ${linker.name} => buff`);
         return
     }
 
@@ -144,7 +139,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
         );
         if (linkersBuff.length > 0) {
             linkersBuff[0].memory.role = "buff"
-            if (this.memory.MYDEBUG) { console.log(`[${this.name}] ${linkersBuff[0].name} => linker`); }
+            console.log(`[${this.name}] ${linkersBuff[0].name} => linker`);
         }
     }
 }
@@ -190,7 +185,7 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
         if (harvs.length > 0) {
             builder = harvs[0];
             builder.memory.role = "buil"
-            if (this.memory.MYDEBUG) { console.log(`[${this.name}] ${builder.name} => buil`); }
+            console.log(`[${this.name}] ${builder.name} => buil`);
             return
         }
     }

@@ -3,14 +3,11 @@ require('WarCreep');
 const REUSEPATHARGS = { reusePath: 6 }
 
 
-Creep.prototype.run = function (MYDEBUG) {
-    if (this.spawning) {
-        if (MYDEBUG && Game.time % 5 == 0) {
-            console.log(`[${this.room.name}] => ${this.name}`)
-        }
+Creep.prototype.run = function () {
+    if (this.spawning && Game.time % 5 == 0) {
+        console.log(`[${this.room.name}] => ${this.name}`)
         return
     }
-    this.memory.MYDEBUG = MYDEBUG
 
     const ARMYROLES = ["shaman", "grunt", "hunter", "demolisher", "tank"]
     if (ARMYROLES.includes(this.memory.role)) {
