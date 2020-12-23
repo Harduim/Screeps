@@ -19,13 +19,11 @@ const ERROR_COLORS = {
 }
 
 class Logger {
-  constructor () {
-    this.defaultLogGroup = 'default'
-  }
+  constructor () {}
 
   log (message, severity = 3, group = false, tags = []) {
     if (!group) {
-      group = this.defaultLogGroup
+      group = 'default'
     }
 
     if (typeof message === 'string' && message.includes('RangeError: Array buffer allocation failed')) {
