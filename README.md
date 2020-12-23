@@ -38,8 +38,10 @@ your units' AI. You control your colony by writing JavaScript.
 
 ### Roles
 - Miner
+- Remote Miner
 - Wall/Rampart Repairer
 - AOE Soldier
+- Scout
 
 ### Structures
 - Labs
@@ -53,6 +55,9 @@ your units' AI. You control your colony by writing JavaScript.
 - Mining and boosting
 - Market
 - Soldier Squads
+- Proximity room grouping
+- Spawning queue, based on the room grouping
+- Define creep role quantities based on room economy 
 
 
 ## To Do

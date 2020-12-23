@@ -7,7 +7,6 @@ const FREE_SPAWNS = { filter: spn => spn.spawning == null };
 Room.prototype.run = function run() {
     if (!this.controller || !this.controller.level || !this.controller.my) { return }
 
-    log(XABLAU, LOG_INFO, this.name)
     this.memory.sourcesCount = this.memory.sourcesCount || this.find(FIND_SOURCES).length
     this.every1000Ticks()
     this.every500Ticks()

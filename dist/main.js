@@ -3,9 +3,6 @@ require('Spawn');
 require('Creep');
 require('StructureTower');
 
-
-global.XABLAU = 99
-
 const Logger = require('logger');
 
 
