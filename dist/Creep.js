@@ -51,12 +51,52 @@ Creep.prototype.run = function () {
             return this.roleLinker()
         case "grave":
             return this.roleGrave()
+        case "mason":
+            return this.roleMason()
     }
 }
 
 function allowedStorages(storages) {
     return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
 }
+
+
+Creep.prototype.roleMason = function () {
+    if (this.store.getUsedCapacity() == 0) {
+        this.memory.building = false;
+        this.memory.goingTo = false;
+        if (this.room.storage && this.room.storage.store.energy > STORAGE_THRESHOLD_MASON) {
+            return this.goWithdraw()
+        } else {
+            return this.goHarvest()
+        }
+    }
+
+    if (!this.memory.building && this.store.getFreeCapacity() == 0 ) {
+        this.memory.building = true;
+    }
+
+    let target = Game.getObjectById(this.memory.goingTo)
+    if (!target || target.structureType != STRUCTURE_WALL) {
+        const strucs = this.room.find(
+            FIND_STRUCTURES,
+            { filter: strc => strc.structureType == STRUCTURE_WALL && strc.hits < strc.hitsMax }
+        )
+        if (strucs.length == 0) {
+            this.memory.role = 'upgr'
+            return
+        }
+        target = strucs.sort((a, b) => a.hits - b.hits)[0]
+        this.memory.goingTo = target.id
+    }
+    console.log(target)
+    if (!this.pos.inRangeTo(target, 3)) {
+        return this.moveTo(target)
+    }
+    return this.repair(target)
+
+}
+
 
 Creep.prototype.roleGrave = function () {
     if (this.memory.harvesting) {
@@ -257,7 +297,7 @@ Creep.prototype.roleBuilder = function () {
 
 Creep.prototype.roleSUpgrader = function () {
     const originalRole = this.name.split("_")[0]
-    if (Game.time % 15 == 0 && originalRole != "supgr" && this.store[RESOURCE_ENERGY] == 0) {
+    if (Game.time % 50 == 0 && originalRole != "supgr" && this.store[RESOURCE_ENERGY] == 0) {
         this.memory.role = originalRole
         return
     }
