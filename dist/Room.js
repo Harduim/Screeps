@@ -1,9 +1,3 @@
-const MAXRHARV = 2
-const SMALLCARRYPTS = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE]
-const BIGCARRYPTS = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, CARRY, MOVE, CARRY, MOVE]
-const FREE_SPAWNS = { filter: spn => spn.spawning == null };
-
-
 Room.prototype.run = function run() {
     if (!this.controller || !this.controller.level || !this.controller.my) { return }
 
