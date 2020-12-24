@@ -89,7 +89,6 @@ Creep.prototype.roleMason = function () {
         target = strucs.sort((a, b) => a.hits - b.hits)[0]
         this.memory.goingTo = target.id
     }
-    console.log(target)
     if (!this.pos.inRangeTo(target, 3)) {
         return this.moveTo(target)
     }
