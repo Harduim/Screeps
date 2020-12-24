@@ -1,3 +1,4 @@
+require('Config');
 require('Room');
 require('Spawn');
 require('Creep');
