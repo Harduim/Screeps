@@ -33,7 +33,7 @@ Spawn.prototype.easySpawnCreep = function (creepRole, energyCap, bodyParts = fal
 
     var workPartFactor
     var carryPartFactor
-    if (false && this.room.memory.controller_road && this.room.memory.spawn_roads) {
+    if (this.room.memory.controller_road && this.room.memory.spawn_roads) {
         workPartFactor = 1.5
         carryPartFactor = 500
     } else {

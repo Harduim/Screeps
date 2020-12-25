@@ -353,7 +353,7 @@ Creep.prototype.goDeposit = function (storFilter = storageFilter) {
 
     var energyStorage = Game.getObjectById(this.memory.goingTo)
     if (!energyStorage) {
-        if ((this.room.memory.censusByPrefix["buff"] || 0) > 0 && !["buff", "rharv"].includes(this.memory.role)) {
+        if (this.room.memory.censusByPrefix && (this.room.memory.censusByPrefix["buff"] || 0) > 0 && !["buff", "rharv"].includes(this.memory.role)) {
             energyStorage = this.room.storage
         } else {
             let targets = this.room.find(FIND_MY_STRUCTURES, { filter: storFilter });
