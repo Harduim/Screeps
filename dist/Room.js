@@ -8,8 +8,6 @@ Room.prototype.run = function run() {
     this.every50Ticks()
     this.every15Ticks()
 
-    log(SpawnQueue)
-
     switch (this.controller.level) {
         case 1:
             this.seedRoom()
