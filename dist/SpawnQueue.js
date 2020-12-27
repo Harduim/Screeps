@@ -4,40 +4,36 @@ class SpawnQueue {
     constructor() {
         if (!Memory.SpawnQueue) {
             clean_queue();
-            this.Qs = Memory.SpawnQueue;
         }
     }
     add_creep(
-        roomName = "any", // 
+        roomName = "any",
         role = "harv",
         energy = 0,
         priority = 9,
-        body = [MOVE],
+        body = false,
         memory = false
     ) {
-        if (!Memory.SpawnQueue[roomName]) {
-            Memory.SpawnQueue[roomName] = [];
-        }
+        let roomQ = this.get_room_queue(roomName);
 
-        Memory.SpawnQueue[roomName].push(
-            {
-                priority,
-                roomName,
-                role,
-                energy,
-                body,
-                memory,
-            }
-        )
-        Memory.SpawnQueue[roomName] = Memory.SpawnQueue[roomName].sort((a, b) => a.priority - b.priority)
+        roomQ.push({ priority, roomName, role, energy, body, memory });
+        roomQ.sort((a, b) => b.priority - a.priority);
     }
+
     get_creep(roomName = "any") {
-        const queued = Memory.SpawnQueue[roomName].filter(i => i.roomName = roomName)[0];
-        return queued
+        return this.get_room_queue(roomName).pop()
     }
 
     get_queue() {
         return Memory.SpawnQueue;
+    }
+
+    get_room_queue(roomName = "any") {
+        const SpawnQ = this.get_queue();
+        if (!SpawnQ[roomName]) {
+            SpawnQ[roomName] = []
+        }
+        return SpawnQ[roomName];
     }
 
     clean_queue() {
@@ -45,14 +41,17 @@ class SpawnQueue {
     }
 
     bodyBuilder(energyCap, carryFactor = 600, workFactor = 1.8) {
-        let carryCount = Math.ceil(energyCap / carryFactor)
-        let workCount = Math.floor(Math.floor(energyCap / workFactor) / 100)
-        let moveCount = Math.floor((energyCap - ((carryCount * 50) + (workCount * 100))) / 50)
+        const carryCount = Math.ceil(energyCap / carryFactor)
+        const workCount = Math.floor(Math.floor(energyCap / workFactor) / 100)
+        const moveCount = Math.floor((energyCap - ((carryCount * 50) + (workCount * 100))) / 50)
 
-        var bodyPts = []
-        for (let i = 1; i <= moveCount; i++) { bodyPts = bodyPts.concat(MOVE) }
-        for (let i = 1; i <= carryCount; i++) { bodyPts = bodyPts.concat(CARRY) }
-        for (let i = 1; i <= workCount; i++) { bodyPts = bodyPts.concat(WORK) }
+        let bodyPts = [];
+        let i = 1;
+        for (i; i <= moveCount; i++) { bodyPts.push(MOVE) }
+        i = 1;
+        for (i; i <= carryCount; i++) { bodyPts.push(CARRY) }
+        i = 1;
+        for (i; i <= workCount; i++) { bodyPts.push(WORK) }
 
         return bodyPts // Está saindo da jaula o monstro!
 
@@ -102,6 +101,10 @@ class SpawnQueue {
         for (let i = 1; i <= moveCount; i++) { bodyPts = bodyPts.concat(MOVE) }
 
         return bodyPts
+    }
+
+    toString () {
+        return JSON.stringify(this.get_queue())
     }
 
 }
