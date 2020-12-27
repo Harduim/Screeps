@@ -3,7 +3,7 @@ require('Room');
 require('Spawn');
 require('Creep');
 require('StructureTower');
-require('overides');
+require('overrides');
 
 const Logger = require('logger');
 const SpawnQueue = require('SpawnQueue')
@@ -13,8 +13,7 @@ function every300Ticks() {
     console.log("Runnig 300 Tks Maintenance")
     balanceCreeps()
 
-    console.log('Clearing non-existing creep memory:', name)
-    let name
+    let name;
     for (name in Memory.creeps) {
         if (!Game.creeps[name]) {
             delete Memory.creeps[name]
