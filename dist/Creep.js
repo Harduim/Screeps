@@ -5,7 +5,7 @@ const REUSEPATHARGS = { reusePath: 6 }
 
 Creep.prototype.run = function () {
     if (this.spawning && Game.time % 5 == 0) {
-        console.log(`[${this.room.name}] => ${this.name}`)
+        log(`[${this.room.name}] => ${this.name}`, LOG_INFO, this.room.name)
         return
     }
 
@@ -72,7 +72,7 @@ Creep.prototype.roleMason = function () {
         }
     }
 
-    if (!this.memory.building && this.store.getFreeCapacity() == 0 ) {
+    if (!this.memory.building && this.store.getFreeCapacity() == 0) {
         this.memory.building = true;
     }
 
@@ -398,7 +398,7 @@ Creep.prototype.goHarvest = function (findType = FIND_SOURCES_ACTIVE) {
                 this.dismantle(energySource)
                 break;
             case FIND_TOMBSTONES:
-                console.log(this.withdraw(energySource, RESOURCE_ENERGY))
+                this.withdraw(energySource, RESOURCE_ENERGY)
                 break;
             default:
                 this.harvest(energySource)
@@ -416,7 +416,7 @@ Creep.prototype.goHarvest = function (findType = FIND_SOURCES_ACTIVE) {
 
 Creep.prototype.goWithdraw = function (resourceType = RESOURCE_ENERGY) {
     if (!this.room.storage) {
-        console.log(`${this.name} não achou storage em ${this.room.name}`)
+        log(`${this.name} não achou storage em ${this.room.name}`, LOG_WARN, this.room.name);
         return
     }
     if (!this.pos.inRangeTo(this.room.storage, 1)) {

@@ -70,7 +70,7 @@ Room.prototype.census = function (creepsOwned) {
     this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role);
     this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split("_")[0]);
 
-    console.log(`[${this.name}] Census =>:${JSON.stringify(this.memory.censusByPrefix)}`);
+    log(`[${this.name}] Census =>:${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name);
 
     if (this.energyCapacityAvailable < 1800) {
         this.memory.harvMax = this.memory.sourcesCount + 2
@@ -121,7 +121,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
     if ((this.memory.censusByRole["buff"] || 0) == 0) {
         const linker = this.creepFilterByRole("linker", creepsOwned)[0];
         linker.memory.role = "buff"
-        console.log(`[${this.name}] ${linker.name} => buff`);
+        log(`[${this.name}] ${linker.name} => buff`, LOG_DEBUG, this.name);
         return
     }
 
@@ -133,7 +133,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
         );
         if (linkersBuff.length > 0) {
             linkersBuff[0].memory.role = "buff"
-            console.log(`[${this.name}] ${linkersBuff[0].name} => linker`);
+            log(`[${this.name}] ${linkersBuff[0].name} => linker`, LOG_DEBUG, this.name);
         }
     }
 }
@@ -179,7 +179,7 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
         if (harvs.length > 0) {
             builder = harvs[0];
             builder.memory.role = "buil"
-            console.log(`[${this.name}] ${builder.name} => buil`);
+            log(`[${this.name}] ${builder.name} => buil`, LOG_DEBUG, this.name);
             return
         }
     }
@@ -276,7 +276,7 @@ Room.prototype.teleportEnergy = function () {
 Room.prototype.controllerRoadMaker = function () {
     if (this.memory.controller_road) { return }
 
-    let sources = this.find(FIND_SOURCES)
+    const sources = this.find(FIND_SOURCES)
     for (let src in sources) {
         let path = this.findPath(sources[src].pos, this.controller.pos, {
             ignoreCreeps: true,
@@ -288,8 +288,7 @@ Room.prototype.controllerRoadMaker = function () {
         path.splice(0, 1)
         for (let coord in path) {
             let coords = path[coord]
-            let result = this.createConstructionSite(coords.x, coords.y, STRUCTURE_ROAD)
-            console.log("Create controller road result: " + result)
+            this.createConstructionSite(coords.x, coords.y, STRUCTURE_ROAD)
         }
     }
     this.memory.controller_road = true
@@ -326,7 +325,7 @@ Room.prototype.seedRoom = function () {
         }
     }
     )
-    console.log(`${this.name} Seeding => ${otherRoom.name} | Spawn Result:${seedingResult}`)
+    log(`${this.name} Seeding => ${otherRoom.name} | Spawn Result:${seedingResult}`, LOG_DEBUG, this.name);
 
 }
 
@@ -351,13 +350,13 @@ Room.prototype.maintainClaim = function () {
         )
 
         reserver = reserver ? reserver.length : 0
-        console.log(`[${roomName}] Reserver ${src} => ${reserver}`)
+        log(`[${roomName}] Reserver ${src} => ${reserver}`, LOG_DEBUG, this.name);
         if (reserver >= 1) { return }
 
         spawns = _.filter(spawns, snp => snp.spawning == null)
         if (spawns.length == 0) { return }
         let spawn = spawns[0]
-        console.log(`[${roomName}] ${src} Count:${reserver} of 1 Spawning reserver`)
+        log(`[${roomName}] ${src} Count:${reserver} of 1 Spawning reserver`)
         let memory = spawn.memoryBuilder("claim", src)
         spawn.spawnCreep([TOUGHT, MOVE, MOVE, MOVE, MOVE, CLAIM, CLAIM], `claim_${Game.time}_700`, memory)
     }
@@ -388,13 +387,13 @@ Room.prototype.remoteHarvest = function () {
         )
 
         remoteHarver = remoteHarver ? remoteHarver.length : 0
-        console.log(`[${roomName}] Remote ${src} => ${remoteHarver}`)
+        log(`[${roomName}] Remote ${src} => ${remoteHarver}`, LOG_DEBUG, this.name)
         if (remoteHarver >= MAXRHARV) { return }
 
         spawns = _.filter(spawns, snp => snp.spawning == null)
         if (spawns.length == 0) { return }
         let spawn = spawns[0]
-        console.log(`[${roomName}] ${src} Count:${remoteHarver} of ${MAXRHARV} Spawning new`)
+        log(`[${roomName}] ${src} Count:${remoteHarver} of ${MAXRHARV} Spawning new`, LOG_INFO, this.name)
         spawn.remoteHarvest(src)
     }
     )
@@ -421,7 +420,7 @@ Room.prototype.maintainEuroTruck = function () {
         }
         )
         truck = truck ? truck.length : 0
-        console.log(`[${roomName}] Truck ${src} => ${truck}`)
+        log(`[${roomName}] Truck ${src} => ${truck}`, LOG_DEBUG, this.name)
         if (truck >= 1) { return }
 
         spawns = _.filter(spawns, snp => snp.spawning == null)
@@ -562,22 +561,22 @@ Room.prototype.every15Ticks = function () {
 
 
 Room.prototype.every50Ticks = function () {
-    if (Game.time % 50 != 0) { return }
-    console.log("Running 50 tks maintenance")
+    if (Game.time % 51 != 0) { return }
+    log("Running 50 tks maintenance", LOG_INFO, this.name)
 }
 
 
 Room.prototype.every100Ticks = function () {
-    if (Game.time % 100 != 0) { return }
-    console.log("Running 100 tks Room maintenance")
+    if (Game.time % 101 != 0) { return }
+    log("Running 100 tks Room maintenance", LOG_INFO, this.name)
 
     this.maintainClaim()
 }
 
 
 Room.prototype.every500Ticks = function () {
-    if (Game.time % 500 != 0) { return }
-    console.log("Running 500 tks Room maintenance")
+    if (Game.time % 501 != 0) { return }
+    log("Running 500 tks Room maintenance", LOG_INFO, this.name)
 
     this.roadMaker()
 
@@ -585,9 +584,8 @@ Room.prototype.every500Ticks = function () {
 
 
 Room.prototype.every1000Ticks = function () {
-    if (Game.time % 50 != 0) { return }
-    console.log("Running 1000 tks Room maintenance")
-
+    if (Game.time % 1001 != 0) { return }
+    log("Running 1000 tks Room maintenance", LOG_INFO, this.name)
 }
 
 
@@ -597,7 +595,7 @@ Room.prototype.roadMaker = function () {
 
     let spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
     if (!spawn) { return }
-    console.log(`[${this.name}] RoadMaker spawn:${spawn}`)
+    log(`[${this.name}] RoadMaker spawn:${spawn}`, LOG_DEBUG, this.name)
     let sources = this.find(FIND_SOURCES)
     for (let src in sources) {
         let path = spawn.pos.findPathTo(sources[src], { ignoreCreeps: true, maxOps: 100, swampCost: 4, ignoreRoads: true })
@@ -605,8 +603,7 @@ Room.prototype.roadMaker = function () {
         path.splice(0, 1)
         for (let coord in path) {
             let coords = path[coord]
-            let result = this.createConstructionSite(coords.x, coords.y, STRUCTURE_ROAD)
-            console.log("Create road result: " + result)
+            this.createConstructionSite(coords.x, coords.y, STRUCTURE_ROAD)
         }
     }
     this.memory.spawn_roads = true
@@ -636,13 +633,12 @@ Room.prototype.towerMaker = function () {
         7: [1, -2],
     }[towerNum]
 
-    let spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
+    const spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
     if (!spawn) { return }
-    let coordX = spawn.pos.x
-    let coordY = spawn.pos.y
-    let [offsetX, offsetY] = towerOffets
-    let construct = this.createConstructionSite(coordX + offsetX, coordY + offsetY, STRUCTURE_TOWER)
-    console.log("Construct result: " + construct)
+    const coordX = spawn.pos.x
+    const coordY = spawn.pos.y
+    const [offsetX, offsetY] = towerOffets
+    this.createConstructionSite(coordX + offsetX, coordY + offsetY, STRUCTURE_TOWER)
 }
 
 
@@ -723,10 +719,8 @@ Room.prototype.extencionMaker = function () {
 
     let spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main == true })[0]
     if (!spawn) { return }
-    let coordX = spawn.pos.x
-    let coordY = spawn.pos.y
-    let [offsetX, offsetY] = extensionOffsetFinder(extsNum)
-    let construct = this.createConstructionSite(coordX + offsetX, coordY + offsetY, STRUCTURE_EXTENSION)
-    console.log("Construct ext result: " + construct + offsetX + offsetY)
-
+    const coordX = spawn.pos.x
+    const coordY = spawn.pos.y
+    const [offsetX, offsetY] = extensionOffsetFinder(extsNum)
+    this.createConstructionSite(coordX + offsetX, coordY + offsetY, STRUCTURE_EXTENSION)
 }

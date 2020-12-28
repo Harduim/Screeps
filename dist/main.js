@@ -5,12 +5,12 @@ require('Creep');
 require('StructureTower');
 require('overrides');
 
-const Logger = require('logger');
+const log = require('logger');
 const SpawnQueue = require('SpawnQueue')
 
 function every300Ticks() {
     if (Game.time % 300 != 0) { return }
-    console.log("Runnig 300 Tks Maintenance")
+    log("Runnig 300 Tks Maintenance", LOG_DEBUG)
     balanceCreeps()
 
     let name;
@@ -28,13 +28,12 @@ function balanceCreeps() {
 
 
 module.exports.loop = function () {
-    const logr = new Logger();
-    global.log = logr.log;
+    global.log = log;
     global.SpawnQueue = new SpawnQueue();
     every300Ticks();
 
     if (Game.cpu.bucket < 500) {
-        logr.log('Extremely low bucket - skipping loop', LOG_FATAL, "GENERAL")
+        log('Extremely low bucket - skipping loop', LOG_FATAL)
         return
     }
 
