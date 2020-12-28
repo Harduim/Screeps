@@ -8,7 +8,6 @@ Creep.prototype.run = function () {
     return
   }
 
-  const ARMYROLES = ['shaman', 'grunt', 'hunter', 'demolisher', 'tank']
   if (ARMYROLES.includes(this.memory.role)) {
     this.memory.ARMYROLES = ARMYROLES
     return this.roleArmy()

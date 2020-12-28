@@ -4,3 +4,4 @@ global.BIGCARRYPTS = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MO
 global.FREE_SPAWNS = { filter: spn => spn.spawning == null }
 
 global.STORAGE_THRESHOLD_MASON = 3000
+global.ARMYROLES = ['shaman', 'grunt', 'hunter', 'demolisher', 'tank']
