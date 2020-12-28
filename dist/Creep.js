@@ -72,7 +72,7 @@ Creep.prototype.roleMason = function () {
         }
     }
 
-    if (!this.memory.building && this.store.getFreeCapacity() == 0 ) {
+    if (!this.memory.building && this.store.getFreeCapacity() == 0) {
         this.memory.building = true;
     }
 
@@ -257,14 +257,12 @@ Creep.prototype.roleHarvester = function () {
     return this.goDeposit()
 }
 
-function storageFilter(structure) {
-    if (structure.room.energyAvailable == structure.room.energyCapacityAvailable) {
-        var allowedStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER, STRUCTURE_STORAGE]
+function storageFilter(strc) {
+    let aStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN];
+    if (strc.room.energyAvailable == strc.room.energyCapacityAvailable) {
+        aStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER, STRUCTURE_STORAGE]
     }
-    else {
-        var allowedStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN]
-    }
-    return allowedStorages.includes(structure.structureType) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+    return aStorages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
 Creep.prototype.roleSeeder = function roleSeeder() {
