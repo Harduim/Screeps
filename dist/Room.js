@@ -360,7 +360,7 @@ Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
   let flg
   let creepCount
   let queueCount
-  for (flg in flags) {
+  for (flg of flags) {
     function creepFilter (crp) {
       return crp.memory.remotePos &&
              crp.memory.remotePos.roomName === flg.pos.roomName &&
@@ -383,9 +383,17 @@ Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
         energy: this.energyCapacityAvailable * 0.8,
         priority: DEFAULT_ROLE_PRIORITY[queueType],
         body: body,
-        memory: { role: queueType, remotePos: flg.pos }
+        memory: {
+          remotePos: flg.pos,
+          memory: { 
+            role: queueType,
+            remotePos: flg.pos,
+            default_controller: this.controller.id,
+            default_room: roomName
+          } // memory inner
+        } //memory outer
       }
-    )
+    ) // add creep
   } // for loop
 }
 

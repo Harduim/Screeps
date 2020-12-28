@@ -171,7 +171,7 @@ Creep.prototype.roleRemoteHarvester = function () {
   if (!remotePos) return
 
   if (this.room.find(FIND_HOSTILE_CREEPS).length > 0 || this.hits < this.hitsMax) {
-    this.memory.role = 'supgr'
+    this.memory.role = 'upgr'
     return this.moveTo(Game.getObjectById(this.memory.default_spawn))
   }
 

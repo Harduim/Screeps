@@ -59,7 +59,12 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
   }
   body = body || this.bodyBuilder(energy, carryPartFactor, workPartFactor)
 
-  if (!memory) { memory = this.memoryBuilder(role) }
+  if (memory) {
+    memory.memory.default_spawn = this.id
+    memory.memory.default_spawn_name = this.name
+  } else { 
+    memory = this.memoryBuilder(role) 
+  }
 
   return this.spawnCreep(body, `${role}_${Game.time}_${energy}`, memory)
 }
