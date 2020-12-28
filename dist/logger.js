@@ -18,64 +18,33 @@ const ERROR_COLORS = {
   highlight: '#ffff00'
 }
 
-class Logger {
-  constructor () {}
+function log(message, severity = 3, group = 'default', tags = []) {
+  message = group !== 'default' ? `[${group}]: ${message}` : `[${message}]`;
 
-  log (message, severity = 3, group = false, tags = []) {
-    if (!group) {
-      group = 'default'
-    }
+  let loglevel;
+  if (!Memory.loglevel) {
+    Memory.loglevel = {};
+  }
+  loglevel = Memory.loglevel;
 
-    if (typeof message === 'string' && message.includes('RangeError: Array buffer allocation failed')) {
-      group = 'ivm'
-      message = 'RangeError: Array buffer allocation failed'
-    }
-
-    if (group !== 'default') {
-      message = `[${Game.shard.name}][${group}]: ${message}`
-    } else {
-      message = `[${Game.shard.name}][${message}]`
-    }
-
-    let loglevel = Memory.loglevel
-    if (typeof loglevel === 'object') {
-      loglevel = loglevel[group] || loglevel.default
-    }
-    if (loglevel && loglevel > severity) {
-      return
-    }
-
-    let attributes = ''
-    let tag
-    if (tags) {
-      for (tag in tags) { // jshint ignore:line
-        attributes += ` ${tag}="${tags[tag]}"`
-      }
-    }
-    attributes += ` group="${group}"`
-    attributes += ` severity="${severity}"`
-    attributes += ` tick="${Game.time}"`
-    message = `<font color="${ERROR_COLORS[severity]}"${attributes}>${message}</font>`
-    console.log(message)
+  if (!loglevel[group]) {
+    loglevel[group] = LOG_INFO;
   }
 
-  logData (data, severity, group) {
-    try {
-      this.log(JSON.stringify(data), severity, group)
-    } catch (err) {
-      this.log('Unable to log data due to circular dependency', severity, group)
+  if (loglevel[group] > severity) { return }
+
+  let attributes = '';
+  let tag;
+  if (tags) {
+    for (tag in tags) {
+      attributes += ` ${tag}="${tags[tag]}"`;
     }
   }
-
-  highlight (message) {
-    return this.log(message, 'highlight', false, {
-      type: 'highlight'
-    })
-  }
-
-  highlightData (data) {
-    return this.highlight(JSON.stringify(data))
-  }
+  attributes += ` group="${group}"`;
+  attributes += ` severity="${severity}"`;
+  attributes += ` tick="${Game.time}"`;
+  message = `<font color="${ERROR_COLORS[severity]}"${attributes}>${message}</font>`;
+  console.log(message);
 }
 
-module.exports = Logger
+module.exports = log
