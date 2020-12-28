@@ -18,33 +18,33 @@ const ERROR_COLORS = {
   highlight: '#ffff00'
 }
 
-function log(message, severity = 3, group = 'default', tags = []) {
-  message = group !== 'default' ? `[${group}]: ${message}` : `[${message}]`;
+function log (message, severity = 3, group = 'default', tags = []) {
+  message = group !== 'default' ? `[${group}]: ${message}` : `[${message}]`
 
-  let loglevel;
+  let loglevel
   if (!Memory.loglevel) {
-    Memory.loglevel = {};
+    Memory.loglevel = {}
   }
-  loglevel = Memory.loglevel;
+  loglevel = Memory.loglevel
 
   if (!loglevel[group]) {
-    loglevel[group] = LOG_INFO;
+    loglevel[group] = LOG_INFO
   }
 
   if (loglevel[group] > severity) { return }
 
-  let attributes = '';
-  let tag;
+  let attributes = ''
+  let tag
   if (tags) {
     for (tag in tags) {
-      attributes += ` ${tag}="${tags[tag]}"`;
+      attributes += ` ${tag}="${tags[tag]}"`
     }
   }
-  attributes += ` group="${group}"`;
-  attributes += ` severity="${severity}"`;
-  attributes += ` tick="${Game.time}"`;
-  message = `<font color="${ERROR_COLORS[severity]}"${attributes}>${message}</font>`;
-  console.log(message);
+  attributes += ` group="${group}"`
+  attributes += ` severity="${severity}"`
+  attributes += ` tick="${Game.time}"`
+  message = `<font color="${ERROR_COLORS[severity]}"${attributes}>${message}</font>`
+  console.log(message)
 }
 
 module.exports = log
