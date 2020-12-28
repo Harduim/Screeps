@@ -62,6 +62,5 @@ your units' AI. You control your colony by writing JavaScript.
 
 ## To Do
 - Find a better code formatter
-- Incorporate new Javascript features
 - Figure out a way to integrate some profiler
 - Benchmark energy efficiency of different logistics models
