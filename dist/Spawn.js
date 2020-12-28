@@ -53,7 +53,7 @@ Spawn.prototype.remoteHarvest = function (remotePos) {
 }
 
 Spawn.prototype.easySpawnFighter = function (creepRole, energyCap = 2000, squad = '000') {
-  const toParts = creepRole == 'shaman' ? 0 : Math.ceil(energyCap * 0.003)
+  const toParts = creepRole === 'shaman' ? 0 : Math.ceil(energyCap * 0.003)
   const bodyParts = this.fighterBodyBuilder(creepRole, energyCap, toParts)
   const memory = this.memoryBuilder(creepRole)
 
@@ -62,27 +62,27 @@ Spawn.prototype.easySpawnFighter = function (creepRole, energyCap = 2000, squad 
 
 Spawn.prototype.fighterBodyBuilder = function fighterBodyBuilder (role, energyCap, toughCount = 0) {
   /*
-    MOVE			50:     Move
-    WORK			100:    Dismantles a structure for 50 hits per tick
-    ATTACK			80:		30 hits per tick short-ranged
-    RANGED_ATTACK	150:	10 hits per tick long-range 3 squares.
+    MOVE           50:     Move
+    WORK           100:    Dismantles a structure for 50 hits per tick
+    ATTACK         80:     30 hits per tick short-ranged
+    RANGED_ATTACK  150:    10 hits per tick long-range 3 squares.
                             Attacks all hostile creeps/structures within 3 squares range with 1-4-10 hits
                             (depending on the range).
-    HEAL			250:	Heals 12 hits per tick in short range or 4 hits per tick at a distance.
-    TOUGH			10:		No effect, just additional hit points to the creep's body. Can be boosted to resist damage.
+    HEAL           250:    Heals 12 hits per tick in short range or 4 hits per tick at a distance.
+    TOUGH          10:     No effect, just additional hit points to the creep's body. Can be boosted to resist damage.
     */
 
   const moveCost = 50
   const workCost = 100
   const attackCost = 80
-  const ranged_attackCost = 150
+  const rangedAttackCost = 150
   const healCost = 250
   const toughCost = 10
 
   const armyRoles = {
     shaman: [healCost, HEAL],
     grunt: [attackCost, ATTACK],
-    hunter: [ranged_attackCost, RANGED_ATTACK],
+    hunter: [rangedAttackCost, RANGED_ATTACK],
     demolisher: [workCost, WORK],
     tank: [attackCost, TOUGH]
   }

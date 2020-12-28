@@ -2,7 +2,7 @@ Creep.prototype.roleArmy = function () {
   const rallyPoint = Game.flags['point_' + this.name.split('_')[2]]
 
   if (rallyPoint) {
-    if (this.room.name != rallyPoint.pos.roomName) {
+    if (this.room.name !== rallyPoint.pos.roomName) {
       return this.moveTo(rallyPoint)
     }
   }
@@ -34,7 +34,7 @@ Creep.prototype.roleGrunt = function () {
 Creep.prototype.roleDemolisher = function () {
   const toDemo = this.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {
     filter: function (struc) {
-      return struc.structureType != STRUCTURE_STORAGE
+      return struc.structureType !== STRUCTURE_STORAGE
     }
   })
   if (toDemo) {

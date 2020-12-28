@@ -9,7 +9,7 @@ const log = require('logger')
 const SpawnQueue = require('SpawnQueue')
 
 function every300Ticks () {
-  if (Game.time % 300 != 0) { return }
+  if (Game.time % 300 !== 0) { return }
   log('Runnig 300 Tks Maintenance', LOG_DEBUG)
   balanceCreeps()
 

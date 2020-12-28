@@ -21,17 +21,10 @@ const ERROR_COLORS = {
 function log (message, severity = 3, group = 'default', tags = []) {
   message = group !== 'default' ? `[${group}]: ${message}` : `[${message}]`
 
-  let loglevel
-  if (!Memory.loglevel) {
-    Memory.loglevel = {}
-  }
-  loglevel = Memory.loglevel
-
-  if (!loglevel[group]) {
-    loglevel[group] = LOG_INFO
-  }
-
-  if (loglevel[group] > severity) { return }
+  if (!Memory.loglevel) Memory.loglevel = {}
+  const loglevel = Memory.loglevel
+  if (!loglevel[group]) loglevel[group] = LOG_INFO
+  if (loglevel[group] > severity) return
 
   let attributes = ''
 
