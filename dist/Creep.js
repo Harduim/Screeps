@@ -214,7 +214,7 @@ Creep.prototype.roleRemoteHarvester = function () {
     return this.goDeposit(
       function (struc) {
         return [STRUCTURE_SPAWN, STRUCTURE_TOWER, STRUCTURE_STORAGE, STRUCTURE_LINK].includes(struc.structureType) &&
-                    struc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+          struc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
       }
     )
   }

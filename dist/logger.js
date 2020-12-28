@@ -34,6 +34,7 @@ function log (message, severity = 3, group = 'default', tags = []) {
   if (loglevel[group] > severity) { return }
 
   let attributes = ''
+
   let tag
   if (tags) {
     for (tag in tags) {
