@@ -7,6 +7,7 @@ Room.prototype.run = function run () {
   this.every100Ticks()
   this.every50Ticks()
   this.every15Ticks()
+  this.queueRemote()
 
   switch (this.controller.level) {
     case 1:
@@ -337,6 +338,55 @@ Room.prototype.queueClaim = function () {
       }
     )
   } // flor loop
+}
+
+function findFlags (flagRole, roomName) {
+  return _.filter(
+    Game.flags,
+    function (flag) {
+      const [fName, fRole] = flag.name.split('_')
+      return fName === roomName && fRole === flagRole
+    }
+  ) // filter
+}
+
+Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
+  const roomName = this.name
+  let flags = findFlags(queueType, roomName)
+  if (flags.length === 0) return
+  flags = _.sortBy(flags, 'name')
+  
+  const roomQ = SpawnQueue.getRoomQueue(roomName)
+  let flg
+  let creepCount
+  let queueCount
+  for (flg in flags) {
+    function creepFilter (crp) {
+      return crp.memory.remotePos &&
+             crp.memory.remotePos.roomName === flg.pos.roomName &&
+             crp.memory.remotePos.x === flg.pos.x &&
+             crp.memory.remotePos.y === flg.pos.y
+    }
+    creepCount = _.filter(Game.creeps, creepFilter)
+    if (creepCount.length > 0) {
+      continue
+    }
+    queueCount = roomQ.filter(creepFilter)
+    if (queueCount.length > 0) {
+      continue
+    }
+
+    SpawnQueue.addCreep(
+      {
+        roomName: roomName,
+        role: queueType,
+        energy: this.energyCapacityAvailable * 0.8,
+        priority: DEFAULT_ROLE_PRIORITY[queueType],
+        body: body,
+        memory: { role: queueType, remotePos: flg.pos }
+      }
+    )
+  } // for loop
 }
 
 Room.prototype.remoteHarvest = function () {
