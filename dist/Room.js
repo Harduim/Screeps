@@ -73,7 +73,7 @@ Room.prototype.census = function (creepsOwned) {
   this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role)
   this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split('_')[0])
 
-  log(`[${this.name}] Census =>:${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
+  log(`Census =>:${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
   if (this.energyCapacityAvailable < 1800) {
     this.memory.harvMax = this.memory.sourcesCount + 2
@@ -121,7 +121,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
   if ((this.memory.censusByRole.buff || 0) === 0) {
     const linker = this.creepFilterByRole('linker', creepsOwned)[0]
     linker.memory.role = 'buff'
-    log(`[${this.name}] ${linker.name} => buff`, LOG_DEBUG, this.name)
+    log(`${linker.name} => buff`, LOG_DEBUG, this.name)
     return
   }
 
@@ -133,7 +133,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
     )
     if (linkersBuff.length > 0) {
       linkersBuff[0].memory.role = 'buff'
-      log(`[${this.name}] ${linkersBuff[0].name} => linker`, LOG_DEBUG, this.name)
+      log(`${linkersBuff[0].name} => linker`, LOG_DEBUG, this.name)
     }
   }
 }
@@ -175,7 +175,7 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
     if (harvs.length > 0) {
       builder = harvs[0]
       builder.memory.role = 'buil'
-      log(`[${this.name}] ${builder.name} => buil`, LOG_DEBUG, this.name)
+      log(`${builder.name} => buil`, LOG_DEBUG, this.name)
       return
     }
   }
@@ -204,10 +204,10 @@ Room.prototype.queueBasics = function () {
     SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy, priority: 0 })
   }
   if (harvQ + harvCount < this.memory.harvMax) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: minEnergy })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: this.energyCapacityAvailable })
   }
   if (upgrQ + upgrCount < this.memory.upgrMax) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: this.energyCapacityAvailable })
   }
 }
 
@@ -399,7 +399,7 @@ Room.prototype.maintainLinker = function () {
     return
   }
 
-  log(SpawnQueue.getCountByRole('linker', this.name), LOG_FATAL, this.name)
+  log(SpawnQueue.getCountByRole('linker', this.name), LOG_DEBUG, this.name)
   if (SpawnQueue.getCountByRole('linker', this.name) > 0) return
 
   SpawnQueue.addCreep(
@@ -423,7 +423,7 @@ Room.prototype.maintainBuff = function () {
     return
   }
 
-  log(SpawnQueue.getCountByRole('buff', this.name), LOG_FATAL, this.name)
+  log(SpawnQueue.getCountByRole('buff', this.name), LOG_DEBUG, this.name)
   if (SpawnQueue.getCountByRole('buff', this.name) > 0) return
 
   SpawnQueue.addCreep(
@@ -484,7 +484,7 @@ Room.prototype.roadMaker = function () {
 
   const spawn = this.find(FIND_MY_SPAWNS, { filter: (spn) => spn.memory.main === true })[0]
   if (!spawn) return
-  log(`[${this.name}] RoadMaker spawn:${spawn}`, LOG_DEBUG, this.name)
+  log(`RoadMaker spawn:${spawn}`, LOG_DEBUG, this.name)
   const sources = this.find(FIND_SOURCES)
   for (const src in sources) {
     const path = spawn.pos.findPathTo(sources[src], { ignoreCreeps: true, maxOps: 100, swampCost: 4, ignoreRoads: true })
