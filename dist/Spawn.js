@@ -11,7 +11,7 @@ Spawn.prototype.run = function () {
   const spnResult = this.easySpawnCreep(protoCreep)
 
   if (spnResult !== 0) {
-    log(`Spawn unsuccessful: ${spnResult}`, LOG_INFO)
+    log(`Spawn unsuccessful: ${spnResult}`, LOG_DEBUG)
     SpawnQueue.addCreep(protoCreep)
   }
 
