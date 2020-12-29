@@ -48,6 +48,8 @@ Spawn.prototype.memoryBuilder = function (role, remotePos = false) {
 Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory = false }) {
   energy = energy < this.room.memory.maxBasicSize ? energy : this.room.memory.maxBasicSize
 
+  if (energy < 300) return ERR_NOT_ENOUGH_ENERGY
+
   let workPartFactor
   let carryPartFactor
   if (this.room.memory.controller_road && this.room.memory.spawn_roads) {
@@ -62,8 +64,8 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
   if (memory) {
     memory.memory.default_spawn = this.id
     memory.memory.default_spawn_name = this.name
-  } else { 
-    memory = this.memoryBuilder(role) 
+  } else {
+    memory = this.memoryBuilder(role)
   }
 
   return this.spawnCreep(body, `${role}_${Game.time}_${energy}`, memory)
