@@ -60,8 +60,11 @@ Room.prototype.roomCoordinator = function () {
   this.structureCensus(structs)
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
-  this.maintainBuff()
-  this.maintainLinker()
+  if (this.storage) {
+    const buffEnergy = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
+    this.queueLocal('buff', 4, buffEnergy)
+    if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS) 
+  }
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote()
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
@@ -307,6 +310,36 @@ function findFlags (flagRole, roomName) {
     }
   ) // filter
 }
+
+
+Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, body = false) {
+  if (this.controller.level < controllerLvl) return
+  if ((this.memory.censusByPrefix[queueType] || 0) > 0) return
+  if (SpawnQueue.getCountByRole(queueType) > 0) return
+
+  let energy = Math.ceil(this.energyCapacityAvailable * 0.75)
+  energy = energy < this.memory.maxBasicSize ? energy : this.memory.maxBasicSize
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.name,
+      role: queueType,
+      energy: energy,
+      priority: DEFAULT_ROLE_PRIORITY[queueType],
+      body: body || SpawnQueue.bodyBuilder(energy),
+      memory: {
+        remotePos: false,
+        memory: {
+          role: queueType,
+          remotePos: false,
+          default_controller: this.controller.id,
+          default_room: this.name
+        } // memory inner
+      } // memory outer
+    }
+  ) // add creep
+}
+
 
 Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, body = false) {
   if (this.controller.level < controllerLvl) return
