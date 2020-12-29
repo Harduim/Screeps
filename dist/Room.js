@@ -384,66 +384,6 @@ Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, b
   } // for loop
 }
 
-Room.prototype.maintainLinker = function () {
-  if (!this.storage ||
-    !this.controller ||
-    this.controller.level < 5 ||
-    (this.memory.censusByPrefix.linker || 0) > 0 ||
-    this.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_LINK } }).length === 0
-  ) {
-    return
-  }
-
-  log(SpawnQueue.getCountByRole('linker', this.name), LOG_DEBUG, this.name)
-  if (SpawnQueue.getCountByRole('linker', this.name) > 0) return
-
-  SpawnQueue.addCreep(
-    {
-      roomName: this.name,
-      role: 'linker',
-      energy: 600,
-      priority: DEFAULT_ROLE_PRIORITY.linker,
-      body: SMALLCARRYPTS,
-      memory: false
-    }
-  )
-}
-
-Room.prototype.maintainBuff = function () {
-  if (!this.storage ||
-    !this.controller ||
-    this.controller.level < 4 ||
-    (this.memory.censusByPrefix.buff || 0) > 0 ||
-    (this.storage.store.getUsedCapacity(RESOURCE_ENERGY) === 0 && (this.memory.censusByPrefix.linker || 0) === 0)
-  ) {
-    return
-  }
-
-  log(SpawnQueue.getCountByRole('buff', this.name), LOG_DEBUG, this.name)
-  if (SpawnQueue.getCountByRole('buff', this.name) > 0) return
-
-  SpawnQueue.addCreep(
-    {
-      roomName: this.name,
-      role: 'buff',
-      energy: 600,
-      priority: DEFAULT_ROLE_PRIORITY.buff,
-      body: this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS,
-      memory: false
-    }
-  )
-}
-
-Room.prototype.maintainMigr = function () {
-  const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-  if (spawns.length === 0) return
-  const spawn = spawns[0]
-
-  let bodyParts = SMALLCARRYPTS
-  if (this.energyCapacityAvailable > 1800) bodyParts = BIGCARRYPTS
-  // return spawn.easySpawnCreep('migr', 600, bodyParts)
-}
-
 Room.prototype.defend = function () {
   const enemyCreeps = this.find(FIND_CREEPS, {
     filter: (crp) => !crp.my &&
