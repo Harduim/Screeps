@@ -12,7 +12,6 @@ Room.prototype.run = function run () {
       { controllerLvl: [5, 8], schedule: 16, name: 'maintainLinker', args: false },
       { controllerLvl: [1, 8], schedule: 14, name: 'roomCoordinator', args: false },
       { controllerLvl: [1, 8], schedule: 16, name: 'defend', args: false },
-      { controllerLvl: [5, 8], schedule: 17, name: 'queueClaim', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
       { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false }
     ]
@@ -66,6 +65,7 @@ Room.prototype.roomCoordinator = function () {
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote()
+    this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
 }
 
@@ -299,42 +299,6 @@ Room.prototype.controllerRoadMaker = function () {
   this.memory.controller_road = true
 }
 
-Room.prototype.queueClaim = function () {
-  const roomName = this.name
-  const desiredRooms = _.filter(Game.flags, function (flag) {
-    const nameSplit = flag.name.split('_')
-    return nameSplit[0] === roomName && nameSplit[1] === 'claim'
-  }
-  )
-  if (desiredRooms.length === 0) return
-
-  const roomQ = SpawnQueue.getRoomQueue(roomName)
-
-  let src, claimFilter, claimCount, claimQ
-  for (src in desiredRooms) {
-    claimFilter = crp => crp.memory.remotePos && crp.memory.remotePos.roomName === src.pos.roomName
-    claimCount = _.filter(Game.creeps, claimFilter)
-    if (claimCount.length > 0) {
-      continue
-    }
-    claimQ = roomQ.filter(claimFilter)
-    if (claimQ.length > 0) {
-      continue
-    }
-
-    SpawnQueue.addCreep(
-      {
-        roomName: roomName,
-        role: 'claim',
-        energy: 1300,
-        priority: 10,
-        body: [MOVE, MOVE, CLAIM, CLAIM],
-        memory: { role: 'claim', remotePos: src.pos }
-      }
-    )
-  } // flor loop
-}
-
 function findFlags (flagRole, roomName) {
   return _.filter(
     Game.flags,
@@ -345,7 +309,8 @@ function findFlags (flagRole, roomName) {
   ) // filter
 }
 
-Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
+Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, body = false) {
+  if (this.controller.level < controllerLvl) return
   const roomName = this.name
   let flags = findFlags(queueType, roomName)
   if (flags.length === 0) return
