@@ -20,7 +20,7 @@ Room.prototype.nameToInt = function (name) {
   const nums = []
   let c
   for (c of name) nums.push(c.charCodeAt(0))
-  return nums.reduce((a,b)=> a + b)
+  return nums.join('')
 
 }
 
