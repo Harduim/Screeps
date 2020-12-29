@@ -393,7 +393,7 @@ Room.prototype.maintainBuff = function () {
     return
   }
 
-  log(SpawnQueue.getCountByRole('buff', this.name), LOG_FATAL, this.name)
+  log(SpawnQueue.getCountByRole('buff', this.name), LOG_DEBUG, this.name)
   if (SpawnQueue.getCountByRole('buff', this.name) > 0) return
 
   SpawnQueue.addCreep(
