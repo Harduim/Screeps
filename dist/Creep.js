@@ -127,19 +127,11 @@ Creep.prototype.roleBuff = function () {
 }
 
 Creep.prototype.roleMigrate = function () {
-  let flag
-  let target
-  if (this.store.getFreeCapacity() === 0) {
-    flag = Game.flags.to
-  } else {
-    flag = Game.flags.from
-  }
-
-  if (this.room.name === flag.room.name) {
-    target = this.room.storage
-  } else {
-    target = flag
-  }
+  let flag = Game.flags.from
+  if (this.store.getFreeCapacity() === 0) flag = Game.flags.to
+  
+  let target = flag
+  if (this.room.name === flag.room.name) target = this.room.storage
 
   if (!this.pos.inRangeTo(target, 1)) return this.moveTo(target, REUSEPATHARGS)
 
@@ -156,13 +148,11 @@ Creep.prototype.roleClaimer = function () {
 
   if (!this.pos.inRangeTo(remotePos, 1)) return this.moveTo(remotePos)
 
-  if (this.room.controller.reservation && this.room.controller.reservation.username !== 'Harduim') {
-    return this.attackController(this.room.controller)
-  } else if (!this.room.controller.my && !this.room.controller.reservation) {
-    return this.attackController(this.room.controller)
-  } else {
-    return this.reserveController(this.room.controller)
+  const ctlr = this.room.controller
+  if (!ctlr.my && ctlr.reservation && ctlr.reservation.username !== 'Harduim') {
+    return this.attackController(ctlr)
   }
+  return this.reserveController(ctlr)
 }
 
 Creep.prototype.roleRemoteHarvester = function () {
