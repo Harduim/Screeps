@@ -369,8 +369,8 @@ Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
       continue
     }
 
-    let energy = Math.ceil(this.room.energyCapacityAvailable * 0.75)
-    energy = energy < this.room.memory.maxBasicSize ? energy : this.room.memory.maxBasicSize
+    let energy = Math.ceil(this.energyCapacityAvailable * 0.75)
+    energy = energy < this.memory.maxBasicSize ? energy : this.memory.maxBasicSize
     SpawnQueue.addCreep(
       {
         roomName: roomName,
