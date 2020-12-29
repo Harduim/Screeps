@@ -39,8 +39,6 @@ Creep.prototype.run = function () {
       return this.roleSeeder()
     case 'migr':
       return this.roleMigrate()
-    case 'supgr':
-      return this.roleSUpgrader()
     case 'truck':
       return this.roleEuroTruck()
     case 'linker':
@@ -254,28 +252,9 @@ Creep.prototype.roleBuilder = function () {
   return this.goHarvest()
 }
 
-Creep.prototype.roleSUpgrader = function () {
-  const originalRole = this.name.split('_')[0]
-  if (Game.time % 50 === 0 && originalRole !== 'supgr' && this.store[RESOURCE_ENERGY] === 0) {
-    this.memory.role = originalRole
-    return
-  }
-  if (this.memory.upgrading && this.store[RESOURCE_ENERGY] === 0) this.memory.upgrading = false
-  if (!this.memory.upgrading && this.store.getFreeCapacity() === 0) this.memory.upgrading = true
-
-  const controller = Game.getObjectById(this.memory.default_controller)
-  if (this.memory.upgrading) {
-    if (this.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-      this.moveTo(controller, { visualizePathStyle: { stroke: '#ffffff' } })
-    }
-    return
-  }
-  return this.goWithdraw()
-}
-
 Creep.prototype.roleUpgrader = function () {
   const originalRole = this.name.split('_')[0]
-  if (Game.time % 5 === 0 && originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
+  if (Game.time % 100 === 0 && originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
     this.memory.role = originalRole
     return
   }
@@ -287,7 +266,7 @@ Creep.prototype.roleUpgrader = function () {
     if (this.upgradeController(ctrl) === ERR_NOT_IN_RANGE) this.moveTo(ctrl, { visualizePathStyle: { stroke: '#ffffff' } })
     return
   }
-  if (originalRole !== 'upgr' || !this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 150000) {
+  if (originalRole !== 'upgr' || !this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 50000) {
     return this.goHarvest()
   }
   return this.goWithdraw()

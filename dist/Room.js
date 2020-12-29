@@ -7,9 +7,6 @@ Room.prototype.run = function run () {
       { controllerLvl: [3, 8], schedule: 1, name: 'runTowers', args: false },
       { controllerLvl: [4, 8], schedule: 4, name: 'teleportEnergy', args: false },
       { controllerLvl: [3, 8], schedule: 13, name: 'roadMaker', args: false },
-      { controllerLvl: [5, 8], schedule: 13, name: 'maintainSuperUpgrader', args: false },
-      { controllerLvl: [4, 8], schedule: 14, name: 'maintainBuff', args: false },
-      { controllerLvl: [5, 8], schedule: 16, name: 'maintainLinker', args: false },
       { controllerLvl: [1, 8], schedule: 14, name: 'roomCoordinator', args: false },
       { controllerLvl: [1, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
@@ -63,6 +60,8 @@ Room.prototype.roomCoordinator = function () {
   this.structureCensus(structs)
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
+  this.maintainBuff()
+  this.maintainLinker()
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote()
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
@@ -362,6 +361,7 @@ Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, b
 Room.prototype.maintainLinker = function () {
   if (!this.storage ||
     !this.controller ||
+    this.controller.level < 5 ||
     (this.memory.censusByPrefix.linker || 0) > 0 ||
     this.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_LINK } }).length === 0
   ) {
@@ -386,13 +386,14 @@ Room.prototype.maintainLinker = function () {
 Room.prototype.maintainBuff = function () {
   if (!this.storage ||
     !this.controller ||
+    this.controller.level < 4 ||
     (this.memory.censusByPrefix.buff || 0) > 0 ||
     (this.storage.store.getUsedCapacity(RESOURCE_ENERGY) === 0 && (this.memory.censusByPrefix.linker || 0) === 0)
   ) {
     return
   }
 
-  log(SpawnQueue.getCountByRole('buff', this.name), LOG_DEBUG, this.name)
+  log(SpawnQueue.getCountByRole('buff', this.name), LOG_FATAL, this.name)
   if (SpawnQueue.getCountByRole('buff', this.name) > 0) return
 
   SpawnQueue.addCreep(
@@ -405,22 +406,6 @@ Room.prototype.maintainBuff = function () {
       memory: false
     }
   )
-}
-
-Room.prototype.maintainSuperUpgrader = function maintainSuperUpgrader () {
-  if (!this.storage ||
-    !this.controller ||
-    this.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 50000 ||
-    (this.memory.censusByPrefix.supgr || 0) >= 1
-  ) {
-    return
-  }
-
-  const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-  if (spawns.length === 0) return
-  const spawn = spawns[0]
-
-  // return spawn.easySpawnCreep('supgr', this.energyCapacityAvailable)
 }
 
 Room.prototype.maintainMigr = function () {
