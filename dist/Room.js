@@ -193,15 +193,17 @@ Room.prototype.queueBasics = function () {
   const minEnergy = this.energyAvailable > 300 ? this.energyAvailable : 300
   const harvCount = this.memory.censusByPrefix.harv || 0
   const upgrCount = this.memory.censusByPrefix.upgr || 0
-  const harvQ = SpawnQueue.getCountByRole('harv', this.name)
-  const upgrQ = SpawnQueue.getCountByRole('upgr', this.name)
+  let harvQ = SpawnQueue.getCountByRole('harv', this.name)
+  let upgrQ = SpawnQueue.getCountByRole('upgr', this.name)
   log(`hq:${harvQ} uq:${upgrQ}`, LOG_DEBUG, this.name)
 
   if (harvCount === 0 && harvQ === 0) {
     SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: minEnergy, priority: -1 })
+    harvQ++
   }
   if (upgrCount === 0 && upgrQ === 0) {
     SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy, priority: 0 })
+    upgrQ++
   }
   if (harvQ + harvCount < this.memory.harvMax) {
     SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: this.energyCapacityAvailable })
