@@ -317,8 +317,6 @@ Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, b
 
   const roomQ = SpawnQueue.getRoomQueue(roomName)
   let flg
-  let creepCount
-  let queueCount
   for (flg of flags) {
     function creepFilter (crp) {
       return crp.memory.remotePos &&
@@ -326,14 +324,9 @@ Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, b
              crp.memory.remotePos.x === flg.pos.x &&
              crp.memory.remotePos.y === flg.pos.y
     }
-    creepCount = _.filter(Game.creeps, creepFilter)
-    if (creepCount.length > 0) {
-      continue
-    }
-    queueCount = roomQ.filter(creepFilter)
-    if (queueCount.length > 0) {
-      continue
-    }
+
+    if (_.filter(Game.creeps, creepFilter).length > 0) continue
+    if (roomQ.filter(creepFilter).length > 0) continue
 
     let energy = Math.ceil(this.energyCapacityAvailable * 0.75)
     energy = energy < this.memory.maxBasicSize ? energy : this.memory.maxBasicSize
