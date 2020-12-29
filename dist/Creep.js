@@ -140,6 +140,7 @@ Creep.prototype.roleMigrate = function () {
   return this.withdraw(this.room.storage, RESOURCE_ENERGY)
 }
 
+
 Creep.prototype.roleClaimer = function () {
   let remotePos = this.memory.remotePos
   remotePos = new RoomPosition(remotePos.x, remotePos.y, remotePos.roomName)
@@ -148,6 +149,7 @@ Creep.prototype.roleClaimer = function () {
 
   const ctlr = this.room.controller
   if (!ctlr.my && ctlr.reservation && ctlr.reservation.username !== 'Harduim') {
+    this.callReinforcements()
     return this.attackController(ctlr)
   }
   return this.reserveController(ctlr)
@@ -373,4 +375,13 @@ Creep.prototype.goBuild = function () {
 
   this.memory.building = false
   return this.goHarvest()
+}
+
+
+Creep.prototype.callReinforcements = function () {
+  const [role, tick, energy] = this.name.split("_")
+  const squad = 0
+
+  //this.createFlag(20, 25, `point_{}`)
+  return
 }

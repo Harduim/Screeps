@@ -14,14 +14,14 @@ class SpawnQueue {
     memory = false
   }) {
     const roomQ = this.getRoomQueue(roomName)
-    log(`addCreep ${role} ${energy} ${priority}`, LOG_DEBUG, roomName)
+    if (roomName == 'W1S18') log(`addCreep ${role} ${energy} ${priority}`, LOG_FATAL, roomName)
     roomQ.push({ priority, roomName, role, energy, body, memory })
     roomQ.sort((a, b) => b.priority - a.priority)
   }
 
   getCreep (roomName = 'any') {
     const protoCreep = this.getRoomQueue(roomName).pop()
-    if (protoCreep) log(`Popping creep from queue: ${JSON.stringify(protoCreep)}`, LOG_DEBUG)
+    if (protoCreep && roomName == 'W1S18') log(`Popping creep from queue: ${JSON.stringify(protoCreep)}`, LOG_FATAL, roomName)
     return protoCreep
   }
 

@@ -15,6 +15,15 @@ Room.prototype.run = function run () {
   )
 }
 
+
+Room.prototype.nameToInt = function (name) {
+  const nums = []
+  let c
+  for (c of name) nums.push(c.charCodeAt(0))
+  return nums.reduce((a,b)=> a + b)
+
+}
+
 Room.prototype.testFunc = function (arg = '!arg', arg2 = '!arg2', arg3 = '!arg3') {
   log(`testFunc args: ${arg}|${arg2}|${arg3}`, LOG_FATAL, this.name)
 }
@@ -61,14 +70,15 @@ Room.prototype.roomCoordinator = function () {
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
   if (this.storage) {
-    const buffEnergy = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
-    this.queueLocal('buff', 4, buffEnergy)
+    const buffBody = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
+    this.queueLocal('buff', 4, buffBody)
     if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS) 
   }
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote('rharv', 4)
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
+  structs.filter(strc => strc.structureType == STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
 Room.prototype.census = function (creepsOwned) {

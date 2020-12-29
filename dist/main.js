@@ -36,6 +36,5 @@ module.exports.loop = function () {
   }
 
   _.invoke(Game.rooms, 'run')
-  _.invoke(Game.spawns, 'run')
   _.invoke(Game.creeps, 'run')
 }

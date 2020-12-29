@@ -1,5 +1,5 @@
-Spawn.prototype.run = function () {
-  if (this.spawning || Game.time % 10 !== 0 || this.room.energyAvailable < 300) return
+Spawn.prototype.consumeQueue = function () {
+  if (this.spawning || this.room.energyAvailable < 300) return
   const protoCreep = SpawnQueue.getCreep(this.room.name)
 
   if (!protoCreep) return
