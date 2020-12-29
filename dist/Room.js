@@ -66,7 +66,7 @@ Room.prototype.roomCoordinator = function () {
     if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS) 
   }
   if (this.energyAvailable === this.energyCapacityAvailable) {
-    this.queueRemote()
+    this.queueRemote('rharv', 4)
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
 }
