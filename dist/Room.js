@@ -75,7 +75,7 @@ Room.prototype.census = function (creepsOwned) {
   this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role)
   this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split('_')[0])
 
-  log(`Census =>:${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
+  log(`Census =>${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
   if (this.energyCapacityAvailable < 1800) {
     this.memory.harvMax = this.memory.sourcesCount + 2
