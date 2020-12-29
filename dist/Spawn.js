@@ -1,5 +1,5 @@
 Spawn.prototype.run = function () {
-  if (this.spawning || this.room.energyAvailable < 300) return
+  if (this.spawning || Game.time % 10 !== 0 || this.room.energyAvailable < 300) return
   const protoCreep = SpawnQueue.getCreep(this.room.name)
 
   if (!protoCreep) return
@@ -50,6 +50,11 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
 
   if (energy < 300) return ERR_NOT_ENOUGH_ENERGY
 
+  if (!role) {
+    log(`${JSON.stringify(role)} ${JSON.stringify(memory)}`, LOG_FATAL, this.room.name)
+    return ERR_INVALID_ARGS
+  }
+
   let workPartFactor
   let carryPartFactor
   if (this.room.memory.controller_road && this.room.memory.spawn_roads) {
@@ -62,6 +67,7 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
   body = body || this.bodyBuilder(energy, carryPartFactor, workPartFactor)
 
   if (memory) {
+    memory.memory.role = role
     memory.memory.default_spawn = this.id
     memory.memory.default_spawn_name = this.name
   } else {

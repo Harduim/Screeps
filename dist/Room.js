@@ -9,11 +9,11 @@ Room.prototype.run = function run () {
       { controllerLvl: [3, 8], schedule: 13, name: 'roadMaker', args: false },
       { controllerLvl: [5, 8], schedule: 13, name: 'maintainSuperUpgrader', args: false },
       { controllerLvl: [4, 8], schedule: 14, name: 'maintainBuff', args: false },
-      { controllerLvl: [1, 8], schedule: 15, name: 'roomCoordinator', args: false },
       { controllerLvl: [5, 8], schedule: 16, name: 'maintainLinker', args: false },
+      { controllerLvl: [1, 8], schedule: 14, name: 'roomCoordinator', args: false },
+      { controllerLvl: [1, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [5, 8], schedule: 17, name: 'queueClaim', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
-      { controllerLvl: [1, 8], schedule: 15, name: 'defend', args: false },
       { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false }
     ]
   )
@@ -65,7 +65,7 @@ Room.prototype.roomCoordinator = function () {
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
   if (this.energyAvailable === this.energyCapacityAvailable) {
-    this.remoteHarvest()
+    this.queueRemote()
   }
 }
 
@@ -204,10 +204,10 @@ Room.prototype.queueBasics = function () {
     SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy, priority: 0 })
   }
   if (harvQ + harvCount < this.memory.harvMax) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: this.energyAvailable })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: minEnergy })
   }
   if (upgrQ + upgrCount < this.memory.upgrMax) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: this.energyAvailable })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy })
   }
 }
 
@@ -390,58 +390,31 @@ Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
   } // for loop
 }
 
-Room.prototype.remoteHarvest = function () {
-  const roomName = this.name
-  let remoteSources = _.filter(Game.flags, function (flag) {
-    const nameSplit = flag.name.split('_')
-    return nameSplit[0] === roomName && nameSplit[1] === 'rharv'
-  }
-  )
-
-  if (!remoteSources) return
-
-  remoteSources = _.sortBy(remoteSources, 'name')
-
-  let spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-  _.forEach(remoteSources, function (src) {
-    let remoteHarver = _.filter(Game.creeps, function (creep) {
-      return creep.memory.remotePos &&
-        creep.memory.remotePos.roomName === src.pos.roomName &&
-        creep.memory.remotePos.x === src.pos.x &&
-        creep.memory.remotePos.y === src.pos.y
-    }
-    )
-
-    remoteHarver = remoteHarver ? remoteHarver.length : 0
-    log(`[${roomName}] Remote ${src} => ${remoteHarver}`, LOG_DEBUG, this.name)
-    if (remoteHarver >= MAXRHARV) return
-
-    spawns = _.filter(spawns, snp => snp.spawning === null)
-    if (spawns.length === 0) return
-    const spawn = spawns[0]
-    log(`[${roomName}] ${src} Count:${remoteHarver} of ${MAXRHARV} Spawning new`, LOG_INFO, this.name)
-    spawn.remoteHarvest(src)
-  }
-  )
-}
-
 Room.prototype.maintainLinker = function () {
   if (!this.storage ||
     !this.controller ||
     (this.memory.censusByPrefix.linker || 0) > 0 ||
-    this.controller.level < 5 ||
     this.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_LINK } }).length === 0
   ) {
     return
   }
 
-  const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-  if (spawns.length === 0) return
-  const spawn = spawns[0]
-  return spawn.easySpawnCreep('linker', 600, SMALLCARRYPTS)
+  log(SpawnQueue.getCountByRole('linker', this.name), LOG_FATAL, this.name)
+  if (SpawnQueue.getCountByRole('linker', this.name) > 0) return
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.name,
+      role: 'linker',
+      energy: 600,
+      priority: DEFAULT_ROLE_PRIORITY.linker,
+      body: SMALLCARRYPTS,
+      memory: false
+    }
+  )
 }
 
-Room.prototype.maintainBuff = function maintainBuff () {
+Room.prototype.maintainBuff = function () {
   if (!this.storage ||
     !this.controller ||
     (this.memory.censusByPrefix.buff || 0) > 0 ||
@@ -450,12 +423,19 @@ Room.prototype.maintainBuff = function maintainBuff () {
     return
   }
 
-  const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-  if (spawns.length === 0) return
-  const spawn = spawns[0]
-  let buffPts = SMALLCARRYPTS
-  if (this.energyCapacityAvailable > 1800) buffPts = BIGCARRYPTS
-  return spawn.easySpawnCreep('buff', 600, buffPts)
+  log(SpawnQueue.getCountByRole('buff', this.name), LOG_FATAL, this.name)
+  if (SpawnQueue.getCountByRole('buff', this.name) > 0) return
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.name,
+      role: 'buff',
+      energy: 600,
+      priority: DEFAULT_ROLE_PRIORITY.buff,
+      body: this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS,
+      memory: false
+    }
+  )
 }
 
 Room.prototype.maintainSuperUpgrader = function maintainSuperUpgrader () {
@@ -471,7 +451,7 @@ Room.prototype.maintainSuperUpgrader = function maintainSuperUpgrader () {
   if (spawns.length === 0) return
   const spawn = spawns[0]
 
-  return spawn.easySpawnCreep('supgr', this.energyCapacityAvailable)
+  // return spawn.easySpawnCreep('supgr', this.energyCapacityAvailable)
 }
 
 Room.prototype.maintainMigr = function () {
@@ -481,30 +461,7 @@ Room.prototype.maintainMigr = function () {
 
   let bodyParts = SMALLCARRYPTS
   if (this.energyCapacityAvailable > 1800) bodyParts = BIGCARRYPTS
-  return spawn.easySpawnCreep('migr', 600, bodyParts)
-}
-
-Room.prototype.runSpawns = function () {
-  const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-  if (spawns.length === 0) return
-  const spawn = spawns[0]
-  const minEnergy = this.energyAvailable > 300 ? this.energyAvailable : 300
-  const harvCount = this.memory.censusByPrefix.harv || 0
-  const upgrCount = this.memory.censusByPrefix.upgr || 0
-
-  switch (true) {
-    case (harvCount === 0):
-      return spawn.easySpawnCreep('harv', minEnergy)
-
-    case (harvCount < this.memory.harvMax):
-      return spawn.easySpawnCreep('harv', this.energyCapacityAvailable)
-
-    case (upgrCount < this.memory.upgrMax):
-      if (this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-        return spawn.easySpawnCreep('upgr', minEnergy)
-      }
-      return spawn.easySpawnCreep('upgr', this.energyCapacityAvailable)
-  }
+  // return spawn.easySpawnCreep('migr', 600, bodyParts)
 }
 
 Room.prototype.defend = function () {

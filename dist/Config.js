@@ -8,6 +8,8 @@ global.ARMYROLES = ['shaman', 'grunt', 'hunter', 'demolisher', 'tank']
 global.DEFAULT_ROLE_PRIORITY = {
   harv: 9,
   upgr: 9,
+  buff: 8,
+  linker: 9,
   claim: 11,
   rharv: 10,
   rminer: 10,
