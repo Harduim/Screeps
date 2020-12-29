@@ -369,13 +369,14 @@ Room.prototype.queueRemote = function (queueType = 'rharv', body = false) {
       continue
     }
 
+    const energy = this.energyCapacityAvailable * 0.8
     SpawnQueue.addCreep(
       {
         roomName: roomName,
         role: queueType,
-        energy: this.energyCapacityAvailable * 0.8,
+        energy: energy,
         priority: DEFAULT_ROLE_PRIORITY[queueType],
-        body: body,
+        body: body || SpawnQueue.bodyBuilder(energy),
         memory: {
           remotePos: flg.pos,
           memory: {

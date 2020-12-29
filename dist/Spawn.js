@@ -18,19 +18,6 @@ Spawn.prototype.run = function () {
   return spnResult
 }
 
-Spawn.prototype.bodyBuilder = function (energyCap, carryFactor = 600, workFactor = 1.8) {
-  const carryCount = Math.ceil(energyCap / carryFactor)
-  const workCount = Math.floor(Math.floor(energyCap / workFactor) / 100)
-  const moveCount = Math.floor((energyCap - ((carryCount * 50) + (workCount * 100))) / 50)
-
-  let bodyPts = []
-  for (let i = 1; i <= moveCount; i++) { bodyPts = bodyPts.concat(MOVE) }
-  for (let i = 1; i <= carryCount; i++) { bodyPts = bodyPts.concat(CARRY) }
-  for (let i = 1; i <= workCount; i++) { bodyPts = bodyPts.concat(WORK) }
-
-  return bodyPts // Está saindo da jaula o monstro!
-}
-
 Spawn.prototype.memoryBuilder = function (role, remotePos = false) {
   return {
     memory:
@@ -55,8 +42,7 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
     return ERR_INVALID_ARGS
   }
 
-  let workPartFactor
-  let carryPartFactor
+  let workPartFactor, carryPartFactor
   if (this.room.memory.controller_road && this.room.memory.spawn_roads) {
     workPartFactor = 1.5
     carryPartFactor = 500
@@ -64,7 +50,7 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
     workPartFactor = 1.8
     carryPartFactor = 600
   }
-  body = body || this.bodyBuilder(energy, carryPartFactor, workPartFactor)
+  body = body || SpawnQueue.bodyBuilder(energy, carryPartFactor, workPartFactor)
 
   if (memory) {
     memory.memory.role = role

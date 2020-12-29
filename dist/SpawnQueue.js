@@ -48,6 +48,20 @@ class SpawnQueue {
     Memory.SpawnQueue = {}
   }
 
+  bodyBuilder (energyCap, carryFactor = 600, workFactor = 1.8) {
+    const carrCount = Math.ceil(energyCap / carryFactor)
+    const workCount = Math.floor(Math.floor(energyCap / workFactor) / 100)
+    const moveCount = Math.floor((energyCap - ((carrCount * 50) + (workCount * 100))) / 50)
+  
+    let bodyPts = []
+    let i
+    for (i = 1; i <= moveCount; i++) bodyPts.push(MOVE)
+    for (i = 1; i <= carrCount; i++) bodyPts.push(CARRY)
+    for (i = 1; i <= workCount; i++) bodyPts.push(WORK)
+  
+    return bodyPts // Está saindo da jaula o monstro!
+  }
+
   toString () {
     return JSON.stringify(this.getQueue())
   }
