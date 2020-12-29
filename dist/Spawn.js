@@ -1,4 +1,24 @@
-Spawn.prototype.bodyBuilder = function bodyBuilder (energyCap, carryFactor = 600, workFactor = 1.8) {
+Spawn.prototype.run = function () {
+  if (this.spawning || Game.time % 10 !== 0 || this.room.energyAvailable < 300) return
+  const protoCreep = SpawnQueue.getCreep(this.room.name)
+
+  if (!protoCreep) return
+
+  if (ARMYROLES.includes(protoCreep.role)) {
+    return
+  }
+
+  const spnResult = this.easySpawnCreep(protoCreep)
+
+  if (spnResult !== 0) {
+    log(`Spawn unsuccessful: ${spnResult}`, LOG_DEBUG)
+    SpawnQueue.addCreep(protoCreep)
+  }
+
+  return spnResult
+}
+
+Spawn.prototype.bodyBuilder = function (energyCap, carryFactor = 600, workFactor = 1.8) {
   const carryCount = Math.ceil(energyCap / carryFactor)
   const workCount = Math.floor(Math.floor(energyCap / workFactor) / 100)
   const moveCount = Math.floor((energyCap - ((carryCount * 50) + (workCount * 100))) / 50)
@@ -25,8 +45,15 @@ Spawn.prototype.memoryBuilder = function (role, remotePos = false) {
   }
 }
 
-Spawn.prototype.easySpawnCreep = function (creepRole, energyCap, bodyParts = false, memory = false) {
-  energyCap = energyCap < this.room.memory.maxBasicSize ? energyCap : this.room.memory.maxBasicSize
+Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory = false }) {
+  energy = energy < this.room.memory.maxBasicSize ? energy : this.room.memory.maxBasicSize
+
+  if (energy < 300) return ERR_NOT_ENOUGH_ENERGY
+
+  if (!role) {
+    log(`${JSON.stringify(role)} ${JSON.stringify(memory)}`, LOG_FATAL, this.room.name)
+    return ERR_INVALID_ARGS
+  }
 
   let workPartFactor
   let carryPartFactor
@@ -37,19 +64,17 @@ Spawn.prototype.easySpawnCreep = function (creepRole, energyCap, bodyParts = fal
     workPartFactor = 1.8
     carryPartFactor = 600
   }
-  bodyParts = bodyParts || this.bodyBuilder(energyCap, carryPartFactor, workPartFactor)
+  body = body || this.bodyBuilder(energy, carryPartFactor, workPartFactor)
 
-  if (!memory) { memory = this.memoryBuilder(creepRole) }
+  if (memory) {
+    memory.memory.role = role
+    memory.memory.default_spawn = this.id
+    memory.memory.default_spawn_name = this.name
+  } else {
+    memory = this.memoryBuilder(role)
+  }
 
-  return this.spawnCreep(bodyParts, `${creepRole}_${Game.time}_${energyCap}`, memory)
-}
-
-Spawn.prototype.remoteHarvest = function (remotePos) {
-  const memory = this.memoryBuilder('rharv', remotePos)
-  let energyCap = Math.ceil(this.room.energyCapacityAvailable * 0.75)
-  energyCap = energyCap < this.room.memory.maxBasicSize ? energyCap : this.room.memory.maxBasicSize
-  const bodyPts = this.bodyBuilder(energyCap, 600)
-  return this.easySpawnCreep('rharv', energyCap, bodyPts, memory)
+  return this.spawnCreep(body, `${role}_${Game.time}_${energy}`, memory)
 }
 
 Spawn.prototype.easySpawnFighter = function (creepRole, energyCap = 2000, squad = '000') {

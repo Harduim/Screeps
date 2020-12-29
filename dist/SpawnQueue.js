@@ -2,25 +2,27 @@
 
 class SpawnQueue {
   constructor () {
-    if (!Memory.SpawnQueue) cleanQueue()
+    if (!Memory.SpawnQueue) this.cleanQueue()
   }
 
-  addCreep (
+  addCreep ({
     roomName = 'any',
-    role = 'harv',
+    role = 'role',
     energy = 0,
     priority = 9,
     body = false,
     memory = false
-  ) {
+  }) {
     const roomQ = this.getRoomQueue(roomName)
-
+    log(`addCreep ${role} ${energy} ${priority}`, LOG_DEBUG, roomName)
     roomQ.push({ priority, roomName, role, energy, body, memory })
     roomQ.sort((a, b) => b.priority - a.priority)
   }
 
   getCreep (roomName = 'any') {
-    return this.getRoomQueue(roomName).pop()
+    const protoCreep = this.getRoomQueue(roomName).pop()
+    if (protoCreep) log(`Popping creep from queue: ${JSON.stringify(protoCreep)}`, LOG_DEBUG)
+    return protoCreep
   }
 
   getQueue () {
@@ -35,7 +37,14 @@ class SpawnQueue {
     return SpawnQ[roomName]
   }
 
+  getCountByRole (role, roomName = 'any') {
+    const roomQ = this.getRoomQueue(roomName)
+    const roleQ = roomQ.filter(qed => qed.role === role)
+    return roleQ.length
+  }
+
   cleanQueue () {
+    log('Initializing spawn queue', LOG_INFO)
     Memory.SpawnQueue = {}
   }
 

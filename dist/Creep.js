@@ -3,12 +3,11 @@ require('WarCreep')
 const REUSEPATHARGS = { reusePath: 6 }
 
 Creep.prototype.run = function () {
-  if (this.spawning && Game.time % 5 === 0) {
-    log(`[${this.room.name}] => ${this.name}`, LOG_INFO, this.room.name)
+  if (this.spawning && Game.time % 10 === 0) {
+    log(`${this.name}`, LOG_INFO, this.room.name)
     return
   }
 
-  const ARMYROLES = ['shaman', 'grunt', 'hunter', 'demolisher', 'tank']
   if (ARMYROLES.includes(this.memory.role)) {
     this.memory.ARMYROLES = ARMYROLES
     return this.roleArmy()
@@ -172,7 +171,7 @@ Creep.prototype.roleRemoteHarvester = function () {
   if (!remotePos) return
 
   if (this.room.find(FIND_HOSTILE_CREEPS).length > 0 || this.hits < this.hitsMax) {
-    this.memory.role = 'supgr'
+    this.memory.role = 'upgr'
     return this.moveTo(Game.getObjectById(this.memory.default_spawn))
   }
 
