@@ -3,7 +3,7 @@ require('WarCreep')
 const REUSEPATHARGS = { reusePath: 6 }
 
 Creep.prototype.run = function () {
-  if (this.spawning && Game.time % 5 === 0) {
+  if (this.spawning && Game.time % 10 === 0) {
     log(`${this.name}`, LOG_INFO, this.room.name)
     return
   }
