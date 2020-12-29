@@ -77,14 +77,6 @@ Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory 
   return this.spawnCreep(body, `${role}_${Game.time}_${energy}`, memory)
 }
 
-Spawn.prototype.remoteHarvest = function (remotePos) {
-  const memory = this.memoryBuilder('rharv', remotePos)
-  let energyCap = Math.ceil(this.room.energyCapacityAvailable * 0.75)
-  energyCap = energyCap < this.room.memory.maxBasicSize ? energyCap : this.room.memory.maxBasicSize
-  const bodyPts = this.bodyBuilder(energyCap, 600)
-  return this.easySpawnCreep('rharv', energyCap, bodyPts, memory)
-}
-
 Spawn.prototype.easySpawnFighter = function (creepRole, energyCap = 2000, squad = '000') {
   const toParts = creepRole === 'shaman' ? 0 : Math.ceil(energyCap * 0.003)
   const bodyParts = this.fighterBodyBuilder(creepRole, energyCap, toParts)
