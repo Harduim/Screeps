@@ -11,9 +11,10 @@ Spawn.prototype.consumeQueue = function () {
   } else {
     spnResult = this.easySpawnCreep(protoCreep)
   }
-
-  if (spnResult !== 0) {
-    log(`Spawn unsuccessful: ${spnResult}`, LOG_DEBUG)
+  
+  log(`${this.name} Spawning ${protoCreep.role}`, LOG_WARN, this.room.name)
+  if (spnResult !== OK) {
+    log(`Spawn unsuccessful: ${spnResult}`, LOG_WARN)
     SpawnQueue.addCreep(protoCreep)
   }
 
