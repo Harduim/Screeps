@@ -8,7 +8,7 @@ Room.prototype.run = function run () {
       { controllerLvl: [4, 8], schedule: 4, name: 'teleportEnergy', args: false },
       { controllerLvl: [3, 8], schedule: 13, name: 'roadMaker', args: false },
       { controllerLvl: [1, 8], schedule: 14, name: 'roomCoordinator', args: false },
-      { controllerLvl: [1, 8], schedule: 16, name: 'defend', args: false },
+      { controllerLvl: [2, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
       { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false }
     ]
@@ -394,16 +394,31 @@ Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, b
 Room.prototype.defend = function () {
   const enemyCreeps = this.find(FIND_CREEPS, {
     filter: (crp) => !crp.my &&
-      //crp.owner.username !== 'Invader' &&
+      crp.owner.username !== 'Invader' &&
       (crp.getActiveBodyparts(ATTACK) > 0 || crp.getActiveBodyparts(RANGED_ATTACK) > 0)
   })
-  if (enemyCreeps.length > 0) {
-    const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200
-    this.createFlag(20, 25, `point_${this.nameToInt()}`)
-    // to do, adapt for new queueing process
-    // _.forEach(spawns, function (spn) { spn.easySpawnFighter('grunt', energyCap, 999) })
-    //this.controller.activateSafeMode()
+  if (enemyCreeps.length == 0) return
+
+  const squad = this.nameToInt()
+  const limit = 2
+  const role = 'grunt'
+  if (_.filter(Game.creeps, crp => crp.name.split('_')[2] === squad && crp.memory.role === role).length >= limit) {
+    return
   }
+  if (SpawnQueue.getCountByRole(role, this.name) >= limit) return
+
+  const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200
+  this.createFlag(2, 2, `point_${squad}`)
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.name,
+      role: role,
+      energy: energyCap,
+      memory: { squad: squad }
+    }
+  )
+  this.controller.activateSafeMode()
 }
 
 Room.prototype.roadMaker = function () {
