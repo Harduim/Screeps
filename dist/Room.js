@@ -76,6 +76,7 @@ Room.prototype.roomCoordinator = function () {
     this.queueRemote('rharv', 4)
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
+  log(`Queue ${JSON.stringify(SpawnQueue.getRoomQueue(this.name))}`, LOG_INFO, this.name)
   structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
@@ -393,16 +394,15 @@ Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, b
 Room.prototype.defend = function () {
   const enemyCreeps = this.find(FIND_CREEPS, {
     filter: (crp) => !crp.my &&
-      crp.owner.username !== 'Invader' &&
+      //crp.owner.username !== 'Invader' &&
       (crp.getActiveBodyparts(ATTACK) > 0 || crp.getActiveBodyparts(RANGED_ATTACK) > 0)
   })
   if (enemyCreeps.length > 0) {
-    const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200
-    this.createFlag(20, 25, 'point_999')
+    this.createFlag(20, 25, `point_${this.nameToInt()}`)
     // to do, adapt for new queueing process
     // _.forEach(spawns, function (spn) { spn.easySpawnFighter('grunt', energyCap, 999) })
-    this.controller.activateSafeMode()
+    //this.controller.activateSafeMode()
   }
 }
 
