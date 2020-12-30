@@ -84,7 +84,11 @@ Creep.prototype.roleMason = function () {
       this.memory.role = 'trader'
       return
     }
-    target = strucs.sort((a, b) => a.hits - b.hits)[0]
+    if (structureType == STRUCTURE_WALL) {
+      target = strucs.sort((a, b) => a.hits - b.hits)[0]
+    } else {
+      target = this.pos.findClosestByRange(strucs)
+    }
     this.memory.goingTo = target.id
   }
   if (!this.pos.inRangeTo(target, 3)) return this.moveTo(target)
