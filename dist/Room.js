@@ -17,6 +17,11 @@ Room.prototype.run = function run () {
   )
 }
 
+Room.prototype.storEnergy = function () {
+  if (!this.storage) return 0
+  return this.storage.store.getUsedCapacity(RESOURCE_ENERGY)
+}
+
 Room.prototype.nameToInt = function () {
   const nums = []
   let c
@@ -95,7 +100,7 @@ Room.prototype.census = function (creepsOwned) {
     this.memory.maxBasicSize = 1600
   } else {
     this.memory.harvMax = this.memory.sourcesCount
-    this.memory.upgrMax = 1
+    this.memory.upgrMax = this.storEnergy() > 50000 ? 2 : 1
     this.memory.builMax = 1
     this.memory.maxBasicSize = 2200
   }
