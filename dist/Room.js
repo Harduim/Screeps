@@ -77,7 +77,7 @@ Room.prototype.roomCoordinator = function () {
     this.queueRemote('rharv', 4)
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
-  log(`Queue ${JSON.stringify(SpawnQueue.getRoomQueue(this.name))}`, LOG_INFO, this.name)
+  log(`Queue ${SpawnQueue.queueToString(this.name)}`, LOG_WARN, this.name)
   structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
@@ -210,18 +210,18 @@ Room.prototype.queueBasics = function () {
   log(`hq:${harvQ} uq:${upgrQ}`, LOG_DEBUG, this.name)
 
   if (harvCount === 0 && harvQ === 0) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: minEnergy, priority: -1 })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: minEnergy, priority: -1 }, 2)
     harvQ++
   }
   if (upgrCount === 0 && upgrQ === 0) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy, priority: 0 })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: minEnergy, priority: 0 }, 2)
     upgrQ++
   }
   if (harvQ + harvCount < this.memory.harvMax) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: this.energyCapacityAvailable })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'harv', energy: this.energyCapacityAvailable }, 2)
   }
   if (upgrQ + upgrCount < this.memory.upgrMax) {
-    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: this.energyCapacityAvailable })
+    SpawnQueue.addCreep({ roomName: this.name, role: 'upgr', energy: this.energyCapacityAvailable }, 2)
   }
 }
 
@@ -324,14 +324,15 @@ function findFlags (flagRole, roomName) {
 Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, body = false) {
   if (this.controller.level < controllerLvl) return
   if ((this.memory.censusByPrefix[queueType] || 0) > 0) return
-  if (SpawnQueue.getCountByRole(queueType) > 0) return
+  if (SpawnQueue.getCountByRole(queueType, this.name) > 0) return
 
   let energy = Math.ceil(this.energyCapacityAvailable * 0.75)
   energy = energy < this.memory.maxBasicSize ? energy : this.memory.maxBasicSize
+  const roomName = this.name
 
   SpawnQueue.addCreep(
     {
-      roomName: this.name,
+      roomName: roomName,
       role: queueType,
       energy: energy,
       priority: DEFAULT_ROLE_PRIORITY[queueType],
@@ -342,7 +343,7 @@ Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, bod
           role: queueType,
           remotePos: false,
           default_controller: this.controller.id,
-          default_room: this.name
+          default_room: roomName
         } // memory inner
       } // memory outer
     }
