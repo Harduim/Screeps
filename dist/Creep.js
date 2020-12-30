@@ -57,8 +57,8 @@ function allowedStorages (storages) {
 }
 
 Creep.prototype.roleMason = function () {
-  let structureType = STRUCTURE_WALL
-  if (this.ticksToLive > 1200) structureType = STRUCTURE_ROAD
+  let strucTypes = [STRUCTURE_WALL, STRUCTURE_RAMPART]
+  if (this.ticksToLive > 1200) strucTypes = [STRUCTURE_ROAD]
 
   if (this.store.getUsedCapacity() === 0) {
     this.memory.building = false
@@ -75,16 +75,16 @@ Creep.prototype.roleMason = function () {
   }
 
   let target = Game.getObjectById(this.memory.goingTo)
-  if (!target || target.structureType !== structureType || target.hits === target.hitsMax) {
+  if (!target || !strucTypes.includes(target.structureType) || target.hits === target.hitsMax) {
     const strucs = this.room.find(
       FIND_STRUCTURES,
-      { filter: strc => strc.structureType === structureType && strc.hits < strc.hitsMax }
+      { filter: strc => strucTypes.includes(strc.structureType) && strc.hits < strc.hitsMax }
     )
     if (strucs.length === 0) {
-      this.memory.role = 'trader'
+      this.memory.role = 'grave'
       return
     }
-    if (structureType == STRUCTURE_WALL) {
+    if (strucTypes.includes(STRUCTURE_WALL)) {
       target = strucs.sort((a, b) => a.hits - b.hits)[0]
     } else {
       target = this.pos.findClosestByRange(strucs)
@@ -298,7 +298,7 @@ Creep.prototype.roleBuilder = function () {
 
 Creep.prototype.roleUpgrader = function () {
   const originalRole = this.name.split('_')[0]
-  if (Game.time % 15 === 0 && originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
+  if (originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
     this.memory.role = originalRole
     return
   }
@@ -310,7 +310,7 @@ Creep.prototype.roleUpgrader = function () {
     if (this.upgradeController(ctrl) === ERR_NOT_IN_RANGE) this.moveTo(ctrl, { visualizePathStyle: { stroke: '#ffffff' } })
     return
   }
-  if (originalRole !== 'upgr' || !this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 50000) {
+  if (originalRole === 'upgr' || !this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 50000) {
     return this.goHarvest()
   }
   return this.goWithdraw()
