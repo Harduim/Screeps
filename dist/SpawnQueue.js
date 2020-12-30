@@ -12,9 +12,13 @@ class SpawnQueue {
     priority = 9,
     body = false,
     memory = false
-  }) {
+  }, limit = 1) {
+    if (this.getCountByRole(role, roomName) >= limit) {
+      log(`Refusing to add creep ${role}`, LOG_WARN, roomName) 
+      return 
+    }
     const roomQ = this.getRoomQueue(roomName)
-    log(`addCreep ${role} ${energy} ${priority}`, LOG_DEBUG, roomName)
+    log(`addCreep ${role} ${energy} ${priority}`, LOG_FATAL, roomName)
     roomQ.push({ priority, roomName, role, energy, body, memory })
     roomQ.sort((a, b) => b.priority - a.priority)
   }
@@ -60,6 +64,14 @@ class SpawnQueue {
     for (i = 1; i <= workCount; i++) bodyPts.push(WORK)
 
     return bodyPts // Está saindo da jaula o monstro!
+  }
+
+  queueToString (roomName = 'any') {
+    const roomQ = this.getRoomQueue(roomName)
+    let msg = '' 
+    let pc
+    for (pc of roomQ) msg = msg + `[${pc.role}:${pc.energy}],`
+    return msg
   }
 
   toString () {
