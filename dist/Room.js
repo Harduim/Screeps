@@ -1,6 +1,7 @@
 Room.prototype.run = function run () {
   if (!this.controller || !this.controller.level || !this.controller.my) return
   this.memory.sourcesCount = this.memory.sourcesCount || this.find(FIND_SOURCES).length
+  if (!this.memory.Highways) this.memory.Highways = {}
 
   this.runTaksSchedule(
     [

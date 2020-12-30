@@ -405,7 +405,7 @@ Creep.prototype.goBuild = function (tryFind = true) {
     constructSite = this.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
   }
   if (!constructSite) {
-    this.memory.role = this.name.split("_")[0]
+    this.memory.role = this.name.split('_')[0]
     this.memory.building = false
     return
   }

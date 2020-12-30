@@ -4,6 +4,7 @@ require('Spawn')
 require('Creep')
 require('StructureTower')
 require('overrides')
+require('Highways')
 
 const log = require('logger')
 const SpawnQueue = require('SpawnQueue')

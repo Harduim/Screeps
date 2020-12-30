@@ -1,10 +1,10 @@
 class LogistQueue {
-    constructor () {
-      if (!Memory.LogistQueue) this.cleanQueue()
-    }
+  constructor () {
+    if (!Memory.LogistQueue) this.cleanQueue()
+  }
 
-    cleanQueue () {
-        log('Initializing delivery queue', LOG_INFO)
-        Memory.LogistQueue = {}
-    }
+  cleanQueue () {
+    log('Initializing delivery queue', LOG_INFO)
+    Memory.LogistQueue = {}
+  }
 }
