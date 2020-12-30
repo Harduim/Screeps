@@ -298,7 +298,7 @@ Creep.prototype.roleBuilder = function () {
 
 Creep.prototype.roleUpgrader = function () {
   const originalRole = this.name.split('_')[0]
-  if (Game.time % 100 === 0 && originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
+  if (Game.time % 15 === 0 && originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
     this.memory.role = originalRole
     return
   }
