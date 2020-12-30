@@ -226,7 +226,7 @@ Creep.prototype.roleRemoteHarvester = function () {
       return this.goBuild(false)
     }
     this.memory.goingTo = false
-    const constructSites = Game.getObjectById(this.memory.destConstSite) || this.pos.findInRange(FIND_CONSTRUCTION_SITES, 3)
+    const constructSites = this.pos.findInRange(FIND_CONSTRUCTION_SITES, 2)
     if (constructSites.length > 0) {
       this.memory.destConstSite = constructSites[0].id
       this.memory.building = true
