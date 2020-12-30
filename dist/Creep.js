@@ -58,7 +58,7 @@ function allowedStorages (storages) {
 
 Creep.prototype.roleMason = function () {
   let structureType = STRUCTURE_WALL
-  if (this.ticksToLive > 1300) structureType = STRUCTURE_ROAD
+  if (this.ticksToLive > 1200) structureType = STRUCTURE_ROAD
 
   if (this.store.getUsedCapacity() === 0) {
     this.memory.building = false
@@ -81,7 +81,7 @@ Creep.prototype.roleMason = function () {
       { filter: strc => strc.structureType === structureType && strc.hits < strc.hitsMax }
     )
     if (strucs.length === 0) {
-      this.memory.role = 'grave'
+      this.memory.role = 'trader'
       return
     }
     target = strucs.sort((a, b) => a.hits - b.hits)[0]
