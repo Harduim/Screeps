@@ -4,11 +4,13 @@ Spawn.prototype.consumeQueue = function () {
 
   if (!protoCreep) return
 
-  if (ARMYROLES.includes(protoCreep.role)) {
-    return
-  }
+  let spnResult
 
-  const spnResult = this.easySpawnCreep(protoCreep)
+  if (ARMYROLES.includes(protoCreep.role)) {
+    spnResult = this.easySpawnFighter(protoCreep.role, protoCreep.energy, protoCreep.memory.squad)
+  } else {
+    spnResult = this.easySpawnCreep(protoCreep)
+  }
 
   if (spnResult !== 0) {
     log(`Spawn unsuccessful: ${spnResult}`, LOG_DEBUG)

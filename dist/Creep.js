@@ -140,7 +140,6 @@ Creep.prototype.roleMigrate = function () {
   return this.withdraw(this.room.storage, RESOURCE_ENERGY)
 }
 
-
 Creep.prototype.roleClaimer = function () {
   let remotePos = this.memory.remotePos
   remotePos = new RoomPosition(remotePos.x, remotePos.y, remotePos.roomName)
@@ -377,11 +376,21 @@ Creep.prototype.goBuild = function () {
   return this.goHarvest()
 }
 
+Creep.prototype.callReinforcements = function (role = 'grunt', limit = 1, energy = false) {
+  const squad = this.room.nameToInt()
+  this.createFlag(25, 25, `point_${squad}`)
 
-Creep.prototype.callReinforcements = function () {
-  const [role, tick, energy] = this.name.split("_")
-  const squad = 0
+  if (_.filter(Game.creeps, crp => crp.name.split('_')[2] === squad && crp.memory.role === role).length >= limit) return
+  if (SpawnQueue.getCountByRole(role) >= limit) return
 
-  //this.createFlag(20, 25, `point_{}`)
-  return
+  if (!energy) energy = this.room.energyCapacityAvailable < 1800 ? 1600 : 2200
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.room.name,
+      role: role,
+      energy: energy,
+      memory: { squad: squad }
+    }
+  )
 }

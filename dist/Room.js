@@ -15,13 +15,11 @@ Room.prototype.run = function run () {
   )
 }
 
-
-Room.prototype.nameToInt = function (name) {
+Room.prototype.nameToInt = function () {
   const nums = []
   let c
-  for (c of name) nums.push(c.charCodeAt(0))
+  for (c of this.name) nums.push(c.charCodeAt(0))
   return nums.join('')
-
 }
 
 Room.prototype.testFunc = function (arg = '!arg', arg2 = '!arg2', arg3 = '!arg3') {
@@ -72,13 +70,13 @@ Room.prototype.roomCoordinator = function () {
   if (this.storage) {
     const buffBody = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
     this.queueLocal('buff', 4, buffBody)
-    if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS) 
+    if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS)
   }
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote('rharv', 4)
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
-  structs.filter(strc => strc.structureType == STRUCTURE_SPAWN && strc.consumeQueue())
+  structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
 Room.prototype.census = function (creepsOwned) {
@@ -321,7 +319,6 @@ function findFlags (flagRole, roomName) {
   ) // filter
 }
 
-
 Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, body = false) {
   if (this.controller.level < controllerLvl) return
   if ((this.memory.censusByPrefix[queueType] || 0) > 0) return
@@ -349,7 +346,6 @@ Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, bod
     }
   ) // add creep
 }
-
 
 Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, body = false) {
   if (this.controller.level < controllerLvl) return
@@ -404,7 +400,8 @@ Room.prototype.defend = function () {
     const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
     const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200
     this.createFlag(20, 25, 'point_999')
-    _.forEach(spawns, function (spn) { spn.easySpawnFighter('grunt', energyCap, 999) })
+    // to do, adapt for new queueing process
+    // _.forEach(spawns, function (spn) { spn.easySpawnFighter('grunt', energyCap, 999) })
     this.controller.activateSafeMode()
   }
 }
