@@ -11,7 +11,7 @@ Room.prototype.run = function run () {
       { controllerLvl: [2, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
       { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false },
-      { controllerLvl: [5, 8], schedule: 1000, name: 'queueRemote', args:['claim', 5, [MOVE, MOVE, CLAIM, CLAIM]] }
+      { controllerLvl: [5, 8], schedule: 1000, name: 'queueRemote', args: ['claim', 5, [MOVE, MOVE, CLAIM, CLAIM]] }
     ]
   )
 }

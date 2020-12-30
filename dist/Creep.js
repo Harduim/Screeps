@@ -197,13 +197,18 @@ Creep.prototype.roleClaimer = function () {
   return this.reserveController(ctlr)
 }
 
+Creep.prototype.roleStaticRharv = function () {
+  const remotePos = this.memory.remotePos
+  if (!remotePos) return
+}
+
 Creep.prototype.roleRemoteHarvester = function () {
   const remotePos = this.memory.remotePos
-
   if (!remotePos) return
 
-  if (this.room.find(FIND_HOSTILE_CREEPS).length > 0 || this.hits < this.hitsMax) {
+  if (this.shouldFlee()) {
     this.memory.role = 'upgr'
+    this.memory.goingTo = this.memory.default_spawn
     return this.moveTo(Game.getObjectById(this.memory.default_spawn))
   }
 
@@ -217,18 +222,22 @@ Creep.prototype.roleRemoteHarvester = function () {
   }
 
   if (!this.room.controller || !this.room.controller.my) {
-    this.memory.goingTo = false
-    const constructSite = Game.getObjectById(this.memory.destConstSite) || this.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-    if (constructSite) {
-      this.memory.destConstSite = constructSite
-      this.memory.building = true
-      return this.goBuild()
+    if (this.memory.building) {
+      return this.goBuild(false)
     }
-    const closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-      filter: (strc) => strc.structure === STRUCTURE_ROAD && strc.hits < strc.hitsMax
-    })
-    if (closestDamagedStructure && this.pos.inRangeTo(closestDamagedStructure, 3)) {
-      this.repair(closestDamagedStructure)
+    this.memory.goingTo = false
+    const constructSites = Game.getObjectById(this.memory.destConstSite) || this.pos.findInRange(FIND_CONSTRUCTION_SITES, 3)
+    if (constructSites.length > 0) {
+      this.memory.destConstSite = constructSites[0].id
+      this.memory.building = true
+      return this.goBuild(false)
+    }
+    const damagedStruc = this.pos.findInRange(
+      FIND_STRUCTURES, 3,
+      { filter: (strc) => [STRUCTURE_ROAD, STRUCTURE_CONTAINER].includes(strc.structure) && strc.hits < strc.hitsMax }
+    )
+    if (damagedStruc.length > 0) {
+      return this.repair(damagedStruc[0])
     }
     return this.moveTo(Game.getObjectById(this.memory.default_controller))
   } else {
@@ -390,10 +399,13 @@ Creep.prototype.goWithdrawFlex = function (resourceType = RESOURCE_ENERGY, storF
   }
 }
 
-Creep.prototype.goBuild = function () {
-  const constructSite = Game.getObjectById(this.memory.destConstSite) || this.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
+Creep.prototype.goBuild = function (tryFind = true) {
+  let constructSite = Game.getObjectById(this.memory.destConstSite)
+  if (tryFind && !constructSite) {
+    constructSite = this.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
+  }
   if (!constructSite) {
-    this.memory.role = 'harv'
+    this.memory.role = this.name.split("_")[0]
     this.memory.building = false
     return
   }
@@ -428,4 +440,11 @@ Creep.prototype.callReinforcements = function (role = 'grunt', limit = 1, energy
       memory: { squad: squad }
     }
   )
+}
+
+Creep.prototype.shouldFlee = function (range = 5) {
+  if (this.hits < this.hitsMax || this.pos.findInRange(FIND_HOSTILE_CREEPS, range).length > 0) {
+    return true
+  }
+  return false
 }

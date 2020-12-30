@@ -14,8 +14,8 @@ class SpawnQueue {
     memory = false
   }, limit = 1) {
     if (this.getCountByRole(role, roomName) >= limit) {
-      log(`Refusing to add creep ${role}`, LOG_WARN, roomName) 
-      return 
+      log(`Refusing to add creep ${role}`, LOG_WARN, roomName)
+      return
     }
     const roomQ = this.getRoomQueue(roomName)
     log(`addCreep ${role} ${energy} ${priority}`, LOG_FATAL, roomName)
@@ -68,7 +68,7 @@ class SpawnQueue {
 
   queueToString (roomName = 'any') {
     const roomQ = this.getRoomQueue(roomName)
-    let msg = '' 
+    let msg = ''
     let pc
     for (pc of roomQ) msg = msg + `[${pc.role}:${pc.energy}],`
     return msg
