@@ -67,6 +67,7 @@ Room.prototype.roomCoordinator = function () {
   this.structureCensus(structs)
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
+  this.queueLocal('mason', 5, [MOVE, MOVE, MOVE, CARRY, CARRY, WORK])
   if (this.storage) {
     const buffBody = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
     this.queueLocal('buff', 4, buffBody)
@@ -247,7 +248,7 @@ Room.prototype.runTowers = function () {
     return
   }
 
-  if (Game.time % 2 === 0) {
+  if (Game.time % 3 === 0) {
     const closestMyCreep = mainSpawn.pos.findClosestByRange(FIND_MY_CREEPS, {
       filter: (creep) => creep.hits < creep.hitsMax
     })
@@ -257,7 +258,7 @@ Room.prototype.runTowers = function () {
     }
   }
 
-  if (Game.time % 10 === 0) {
+  if (Game.time % 15 === 0) {
     const strucWallRampart = [STRUCTURE_WALL, STRUCTURE_RAMPART]
     const lessHits = obj => _.reduce(obj, (a, b) => a.hits <= b.hits ? a : b)
 

@@ -55,6 +55,9 @@ function allowedStorages (storages) {
 }
 
 Creep.prototype.roleMason = function () {
+  let structureType = STRUCTURE_WALL
+  if (this.ticksToLive > 1300) structureType = STRUCTURE_ROAD
+
   if (this.store.getUsedCapacity() === 0) {
     this.memory.building = false
     this.memory.goingTo = false
@@ -70,13 +73,13 @@ Creep.prototype.roleMason = function () {
   }
 
   let target = Game.getObjectById(this.memory.goingTo)
-  if (!target || target.structureType !== STRUCTURE_WALL) {
+  if (!target || target.structureType !== structureType || target.hits === target.hitsMax) {
     const strucs = this.room.find(
       FIND_STRUCTURES,
-      { filter: strc => strc.structureType === STRUCTURE_WALL && strc.hits < strc.hitsMax }
+      { filter: strc => strc.structureType === structureType && strc.hits < strc.hitsMax }
     )
     if (strucs.length === 0) {
-      this.memory.role = 'upgr'
+      this.memory.role = 'grave'
       return
     }
     target = strucs.sort((a, b) => a.hits - b.hits)[0]
