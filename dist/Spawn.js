@@ -1,14 +1,16 @@
-Spawn.prototype.run = function () {
-  if (this.spawning || Game.time % 10 !== 0 || this.room.energyAvailable < 300) return
+Spawn.prototype.consumeQueue = function () {
+  if (this.spawning || this.room.energyAvailable < 300) return
   const protoCreep = SpawnQueue.getCreep(this.room.name)
 
   if (!protoCreep) return
 
-  if (ARMYROLES.includes(protoCreep.role)) {
-    return
-  }
+  let spnResult
 
-  const spnResult = this.easySpawnCreep(protoCreep)
+  if (ARMYROLES.includes(protoCreep.role)) {
+    spnResult = this.easySpawnFighter(protoCreep.role, protoCreep.energy, protoCreep.memory.squad)
+  } else {
+    spnResult = this.easySpawnCreep(protoCreep)
+  }
 
   if (spnResult !== 0) {
     log(`Spawn unsuccessful: ${spnResult}`, LOG_DEBUG)

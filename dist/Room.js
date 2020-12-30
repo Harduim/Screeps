@@ -8,11 +8,18 @@ Room.prototype.run = function run () {
       { controllerLvl: [4, 8], schedule: 4, name: 'teleportEnergy', args: false },
       { controllerLvl: [3, 8], schedule: 13, name: 'roadMaker', args: false },
       { controllerLvl: [1, 8], schedule: 14, name: 'roomCoordinator', args: false },
-      { controllerLvl: [1, 8], schedule: 16, name: 'defend', args: false },
+      { controllerLvl: [2, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
       { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false }
     ]
   )
+}
+
+Room.prototype.nameToInt = function () {
+  const nums = []
+  let c
+  for (c of this.name) nums.push(c.charCodeAt(0))
+  return nums.join('')
 }
 
 Room.prototype.testFunc = function (arg = '!arg', arg2 = '!arg2', arg3 = '!arg3') {
@@ -60,15 +67,18 @@ Room.prototype.roomCoordinator = function () {
   this.structureCensus(structs)
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
+  this.queueLocal('mason', 5, this.energyCapacityAvailable > ENERGYDIVIDER ? BIGLUTILPTS : SMALLUTILPTS)
   if (this.storage) {
-    const buffEnergy = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
-    this.queueLocal('buff', 4, buffEnergy)
-    if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS) 
+    const buffBody = this.energyCapacityAvailable > ENERGYDIVIDER ? BIGCARRYPTS : SMALLCARRYPTS
+    this.queueLocal('buff', 4, buffBody)
+    if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS)
   }
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote('rharv', 4)
     this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
+  log(`Queue ${JSON.stringify(SpawnQueue.getRoomQueue(this.name))}`, LOG_INFO, this.name)
+  structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
 Room.prototype.census = function (creepsOwned) {
@@ -77,7 +87,7 @@ Room.prototype.census = function (creepsOwned) {
 
   log(`Census =>${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
-  if (this.energyCapacityAvailable < 1800) {
+  if (this.energyCapacityAvailable < ENERGYDIVIDER) {
     this.memory.harvMax = this.memory.sourcesCount + 2
     this.memory.upgrMax = this.memory.sourcesCount
     this.memory.builMax = this.memory.sourcesCount + 1
@@ -238,7 +248,7 @@ Room.prototype.runTowers = function () {
     return
   }
 
-  if (Game.time % 2 === 0) {
+  if (Game.time % 3 === 0) {
     const closestMyCreep = mainSpawn.pos.findClosestByRange(FIND_MY_CREEPS, {
       filter: (creep) => creep.hits < creep.hitsMax
     })
@@ -248,7 +258,7 @@ Room.prototype.runTowers = function () {
     }
   }
 
-  if (Game.time % 10 === 0) {
+  if (Game.time % 15 === 0) {
     const strucWallRampart = [STRUCTURE_WALL, STRUCTURE_RAMPART]
     const lessHits = obj => _.reduce(obj, (a, b) => a.hits <= b.hits ? a : b)
 
@@ -311,7 +321,6 @@ function findFlags (flagRole, roomName) {
   ) // filter
 }
 
-
 Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, body = false) {
   if (this.controller.level < controllerLvl) return
   if ((this.memory.censusByPrefix[queueType] || 0) > 0) return
@@ -339,7 +348,6 @@ Room.prototype.queueLocal = function (queueType = 'harv', controllerLvl = 1, bod
     }
   ) // add creep
 }
-
 
 Room.prototype.queueRemote = function (queueType = 'rharv', controllerLvl = 1, body = false) {
   if (this.controller.level < controllerLvl) return
@@ -390,13 +398,28 @@ Room.prototype.defend = function () {
       crp.owner.username !== 'Invader' &&
       (crp.getActiveBodyparts(ATTACK) > 0 || crp.getActiveBodyparts(RANGED_ATTACK) > 0)
   })
-  if (enemyCreeps.length > 0) {
-    const spawns = this.find(FIND_MY_SPAWNS, FREE_SPAWNS)
-    const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200
-    this.createFlag(20, 25, 'point_999')
-    _.forEach(spawns, function (spn) { spn.easySpawnFighter('grunt', energyCap, 999) })
-    this.controller.activateSafeMode()
+  if (enemyCreeps.length == 0) return
+
+  const squad = this.nameToInt()
+  const limit = 2
+  const role = 'grunt'
+  if (_.filter(Game.creeps, crp => crp.name.split('_')[2] === squad && crp.memory.role === role).length >= limit) {
+    return
   }
+  if (SpawnQueue.getCountByRole(role, this.name) >= limit) return
+
+  const energyCap = this.energyCapacityAvailable < ENERGYDIVIDER ? 1600 : 2200
+  this.createFlag(2, 2, `point_${squad}`)
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.name,
+      role: role,
+      energy: energyCap,
+      memory: { squad: squad }
+    }
+  )
+  this.controller.activateSafeMode()
 }
 
 Room.prototype.roadMaker = function () {

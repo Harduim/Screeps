@@ -21,7 +21,7 @@ class SpawnQueue {
 
   getCreep (roomName = 'any') {
     const protoCreep = this.getRoomQueue(roomName).pop()
-    if (protoCreep) log(`Popping creep from queue: ${JSON.stringify(protoCreep)}`, LOG_DEBUG)
+    if (protoCreep) log(`Popping creep from queue: ${JSON.stringify(protoCreep)}`, LOG_DEBUG, roomName)
     return protoCreep
   }
 

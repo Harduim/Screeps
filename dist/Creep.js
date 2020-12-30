@@ -47,6 +47,8 @@ Creep.prototype.run = function () {
       return this.roleGrave()
     case 'mason':
       return this.roleMason()
+    case 'trader':
+      return this.roleTrader()
   }
 }
 
@@ -55,6 +57,9 @@ function allowedStorages (storages) {
 }
 
 Creep.prototype.roleMason = function () {
+  let structureType = STRUCTURE_WALL
+  if (this.ticksToLive > 1200) structureType = STRUCTURE_ROAD
+
   if (this.store.getUsedCapacity() === 0) {
     this.memory.building = false
     this.memory.goingTo = false
@@ -70,13 +75,13 @@ Creep.prototype.roleMason = function () {
   }
 
   let target = Game.getObjectById(this.memory.goingTo)
-  if (!target || target.structureType !== STRUCTURE_WALL) {
+  if (!target || target.structureType !== structureType || target.hits === target.hitsMax) {
     const strucs = this.room.find(
       FIND_STRUCTURES,
-      { filter: strc => strc.structureType === STRUCTURE_WALL && strc.hits < strc.hitsMax }
+      { filter: strc => strc.structureType === structureType && strc.hits < strc.hitsMax }
     )
     if (strucs.length === 0) {
-      this.memory.role = 'upgr'
+      this.memory.role = 'trader'
       return
     }
     target = strucs.sort((a, b) => a.hits - b.hits)[0]
@@ -89,6 +94,40 @@ Creep.prototype.roleMason = function () {
 Creep.prototype.roleGrave = function () {
   if (this.memory.harvesting) return this.goHarvest(FIND_DROPPED_RESOURCES)
   return this.goDeposit()
+}
+
+Creep.prototype.roleTrader = function () {
+  if (!this.room.terminal || !this.room.storage) return
+
+  const terminnalEnergy = this.room.terminal.store.getUsedCapacity(RESOURCE_ENERGY)
+  const storageEnergy = this.room.storage.store.energy
+  if (terminnalEnergy > TERMINAL_ENERGY_BUFFER || storageEnergy < TERMINAL_ENERGY_BUFFER) {
+    this.memory.role = 'mason'
+    return this.roleMason()
+  }
+
+  let energyFrom, energyTo, dest, action
+  if (terminnalEnergy > storageEnergy) {
+    energyFrom = this.room.storage
+    energyTo = this.room.terminal
+  } else {
+    energyFrom = this.room.terminal
+    energyTo = this.room.storage
+  }
+
+  if (this.store.getUsedCapacity() > 0) {
+    dest = energyFrom
+    action = 'transfer'
+  } else {
+    dest = energyTo
+    action = 'withdraw'
+  }
+
+  if (!this.pos.isNearTo(dest)) {
+    return this.moveTo(dest, REUSEPATHARGS)
+  }
+
+  return log(this[action](dest, RESOURCE_ENERGY))
 }
 
 Creep.prototype.roleLinker = function () {
@@ -148,6 +187,7 @@ Creep.prototype.roleClaimer = function () {
 
   const ctlr = this.room.controller
   if (!ctlr.my && ctlr.reservation && ctlr.reservation.username !== 'Harduim') {
+    this.callReinforcements()
     return this.attackController(ctlr)
   }
   return this.reserveController(ctlr)
@@ -373,4 +413,24 @@ Creep.prototype.goBuild = function () {
 
   this.memory.building = false
   return this.goHarvest()
+}
+
+Creep.prototype.callReinforcements = function (role = 'grunt', limit = 1, energy = false) {
+  const squad = this.room.nameToInt()
+  this.room.createFlag(25, 25, `point_${squad}`)
+
+  if (_.filter(Game.creeps, crp => crp.name.split('_')[2] === squad && crp.memory.role === role).length >= limit) return
+  if (SpawnQueue.getCountByRole(role, this.memory.default_room) >= limit) return
+
+  log(`${this.name} Calling for help`, LOG_INFO, this.room.name)
+  if (!energy) energy = this.room.energyCapacityAvailable < 1800 ? 1600 : 2200
+
+  SpawnQueue.addCreep(
+    {
+      roomName: this.memory.default_room,
+      role: role,
+      energy: energy,
+      memory: { squad: squad }
+    }
+  )
 }
