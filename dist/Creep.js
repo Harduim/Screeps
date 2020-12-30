@@ -212,7 +212,7 @@ Creep.prototype.roleRemoteHarvester = function () {
     return this.moveTo(Game.getObjectById(this.memory.default_spawn))
   }
 
-  if (this.store.getFreeCapacity() > 0 && this.memory.harvesting && !this.memory.building) {
+  if (this.memory.harvesting && !this.memory.building) {
     if (this.pos.inRangeTo(remotePos, 1)) {
       this.memory.goingTo = false
       return this.goHarvest()
@@ -233,8 +233,8 @@ Creep.prototype.roleRemoteHarvester = function () {
       return this.goBuild(false)
     }
     const damagedStruc = this.pos.findInRange(
-      FIND_STRUCTURES, 3,
-      { filter: (strc) => [STRUCTURE_ROAD, STRUCTURE_CONTAINER].includes(strc.structure) && strc.hits < strc.hitsMax }
+      FIND_STRUCTURES, 2,
+      { filter: (strc) => [STRUCTURE_ROAD, STRUCTURE_CONTAINER].includes(strc.structureType) && strc.hits < strc.hitsMax }
     )
     if (damagedStruc.length > 0) {
       return this.repair(damagedStruc[0])
