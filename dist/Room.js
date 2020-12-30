@@ -181,10 +181,7 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
     return
   }
   const buildCount = this.memory.censusByRole.buil || 0
-  if (this.storage) {
-    const storageUsedCapacity = this.storage.store.getUsedCapacity(RESOURCE_ENERGY)
-    if (storageUsedCapacity < this.energyCapacityAvailable || buildCount > 0) return
-  }
+  if (this.storEnergy() < this.energyCapacityAvailable || buildCount > 0) return
 
   // Harv => Builder
   if (constSites.length > 0 && buildCount < this.memory.builMax) {
@@ -274,7 +271,7 @@ Room.prototype.runTowers = function () {
       tower.repair(lessHits(nonWallDamaged))
     }
 
-    if (towers.length === 0 || !(this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 30000)) return
+    if (towers.length === 0 || !this.storEnergy() > 30000) return
 
     const damaged = _.filter(structs, struc => strucWallRampart.includes(struc.structureType) && struc.hits < struc.hitsMax)
     const target = lessHits(damaged)
