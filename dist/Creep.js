@@ -378,16 +378,17 @@ Creep.prototype.goBuild = function () {
 
 Creep.prototype.callReinforcements = function (role = 'grunt', limit = 1, energy = false) {
   const squad = this.room.nameToInt()
-  this.createFlag(25, 25, `point_${squad}`)
+  this.room.createFlag(25, 25, `point_${squad}`)
 
   if (_.filter(Game.creeps, crp => crp.name.split('_')[2] === squad && crp.memory.role === role).length >= limit) return
-  if (SpawnQueue.getCountByRole(role) >= limit) return
+  if (SpawnQueue.getCountByRole(role, this.memory.default_room) >= limit) return
 
+  log(`${this.name} Calling for help`, LOG_INFO, this.room.name)
   if (!energy) energy = this.room.energyCapacityAvailable < 1800 ? 1600 : 2200
 
   SpawnQueue.addCreep(
     {
-      roomName: this.room.name,
+      roomName: this.memory.default_room,
       role: role,
       energy: energy,
       memory: { squad: squad }
