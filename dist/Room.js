@@ -67,9 +67,9 @@ Room.prototype.roomCoordinator = function () {
   this.structureCensus(structs)
   this.buffLinkerDirectives(creepsOwned, structs)
   this.harvUpgrBuilDirectives(creepsOwned, constSites)
-  this.queueLocal('mason', 5, [MOVE, MOVE, MOVE, CARRY, CARRY, WORK])
+  this.queueLocal('mason', 5, this.energyCapacityAvailable > ENERGYDIVIDER ? BIGLUTILPTS : SMALLUTILPTS)
   if (this.storage) {
-    const buffBody = this.energyCapacityAvailable > 1800 ? BIGCARRYPTS : SMALLCARRYPTS
+    const buffBody = this.energyCapacityAvailable > ENERGYDIVIDER ? BIGCARRYPTS : SMALLCARRYPTS
     this.queueLocal('buff', 4, buffBody)
     if (this.memory.mainLink) this.queueLocal('linker', 5, SMALLCARRYPTS)
   }
@@ -87,7 +87,7 @@ Room.prototype.census = function (creepsOwned) {
 
   log(`Census =>${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
-  if (this.energyCapacityAvailable < 1800) {
+  if (this.energyCapacityAvailable < ENERGYDIVIDER) {
     this.memory.harvMax = this.memory.sourcesCount + 2
     this.memory.upgrMax = this.memory.sourcesCount
     this.memory.builMax = this.memory.sourcesCount + 1
@@ -408,7 +408,7 @@ Room.prototype.defend = function () {
   }
   if (SpawnQueue.getCountByRole(role, this.name) >= limit) return
 
-  const energyCap = this.energyCapacityAvailable < 1800 ? 1600 : 2200
+  const energyCap = this.energyCapacityAvailable < ENERGYDIVIDER ? 1600 : 2200
   this.createFlag(2, 2, `point_${squad}`)
 
   SpawnQueue.addCreep(
