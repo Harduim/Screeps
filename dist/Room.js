@@ -10,7 +10,8 @@ Room.prototype.run = function run () {
       { controllerLvl: [1, 8], schedule: 14, name: 'roomCoordinator', args: false },
       { controllerLvl: [2, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
-      { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false }
+      { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false },
+      { controllerLvl: [5, 8], schedule: 1000, name: 'queueRemote', args:['claim', 5, [MOVE, MOVE, CLAIM, CLAIM]] }
     ]
   )
 }
@@ -75,7 +76,6 @@ Room.prototype.roomCoordinator = function () {
   }
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote('rharv', 4)
-    this.queueRemote('claim', 5, [MOVE, MOVE, CLAIM, CLAIM])
   }
   log(`Queue ${SpawnQueue.queueToString(this.name)}`, LOG_WARN, this.name)
   structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())

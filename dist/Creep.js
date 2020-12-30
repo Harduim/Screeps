@@ -244,15 +244,6 @@ Creep.prototype.roleRemoteHarvester = function () {
 Creep.prototype.roleHarvester = function () {
   if (this.memory.harvesting) return this.goHarvest()
 
-  if (Game.time % 16 === 0) {
-    const closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-      filter: strc => strc.hits < strc.hitsMax && ![STRUCTURE_WALL, STRUCTURE_RAMPART].includes(strc.structureType)
-    })
-    if (closestDamagedStructure && this.pos.inRangeTo(closestDamagedStructure, 3)) {
-      this.repair(closestDamagedStructure)
-    }
-  }
-
   if (!this.memory.goingTo) {
     const closeLink = this.pos.findInRange(FIND_MY_STRUCTURES, 2, {
       filter: strc => (strc.structureType === STRUCTURE_LINK && strc.store.energy < 795)
@@ -310,10 +301,10 @@ Creep.prototype.roleUpgrader = function () {
     if (this.upgradeController(ctrl) === ERR_NOT_IN_RANGE) this.moveTo(ctrl, { visualizePathStyle: { stroke: '#ffffff' } })
     return
   }
-  if (originalRole === 'upgr' || !this.room.storage || this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) < 50000) {
-    return this.goHarvest()
+  if (originalRole !== 'upgr' || (this.room.storage && this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 50000)) {
+    return this.goWithdraw()
   }
-  return this.goWithdraw()
+  return this.goHarvest()
 }
 
 Creep.prototype.goDeposit = function (storFilter = storageFilter) {
