@@ -1,5 +1,5 @@
 Room.prototype.cleanHways = function () {
-  return this.memory.Highways = {}
+  this.memory.Highways = {}
 }
 
 Room.prototype.getHighway = function (HwayId) {

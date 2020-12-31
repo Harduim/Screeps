@@ -402,7 +402,7 @@ Room.prototype.defend = function () {
       crp.owner.username !== 'Invader' &&
       (crp.getActiveBodyparts(ATTACK) > 0 || crp.getActiveBodyparts(RANGED_ATTACK) > 0)
   })
-  if (enemyCreeps.length == 0) return
+  if (enemyCreeps.length === 0) return
 
   const squad = this.nameToInt()
   const limit = 2

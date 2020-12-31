@@ -67,12 +67,12 @@ Creep.prototype.roleEuroTruck = function () {
   let action, dest
   if (this.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
     action = 'withdraw'
-    dest = road[road.length -1]
+    dest = road[road.length - 1]
   } else {
     action = 'transfer'
     dest = road[0]
   }
-  
+
   dest = new RoomPosition(dest.x, dest.y, dest.roomName)
   if (this.pos.inRangeTo(dest, 2)) {
     const target = this.room.lookForAtArea(
@@ -80,11 +80,10 @@ Creep.prototype.roleEuroTruck = function () {
     )
     this[action](target[0].structure, RESOURCE_ENERGY)
   }
-  this.moveTo(dest, { reusePath: 100 }) 
-
+  this.moveTo(dest, { reusePath: 100 })
 }
 
-Creep.prototype.lookArround = function(lookType) {
+Creep.prototype.lookArround = function (lookType) {
   const target = this.room.lookForAtArea(
     lookType, this.pos.y - 1, this.pos.x - 1, this.pos.y + 1, this.pos.x + 1, true
   )
@@ -98,36 +97,56 @@ Creep.prototype.roleStaticRharv = function () {
   const remotePos = new RoomPosition(rPos.x, rPos.y, rPos.roomName)
 
   if (rPos.roomName !== this.room.name || !this.pos.inRangeTo(remotePos, 0)) {
-    return this.moveTo(remotePos) 
+    return this.moveTo(remotePos)
   }
 
+  if (this.memory.building) {
+    this.memory.role = 'buil'
+    return this.roleBuilder()
+  }
+
+  const nosrcerrmsg = `[${this.room.name}][${this.name}] Source not found`
+  const nocontainererrmsg = `[${this.room.name}][${this.name}] Container not found`
   if (!this.memory.source) {
     const sourceId = this.lookArround(LOOK_SOURCES)
     this.memory.source = sourceId
-    if (!sourceId) {
-      return log(`[${this.room.name}][${this.name}] Source not found`, LOG_WARN, 'STATIC_RHARV')
-    }
+    if (!sourceId) return log(nosrcerrmsg, LOG_WARN, 'STATIC_RHARV')
   }
 
   if (!this.memory.container) {
     const containerId = this.lookArround(LOOK_STRUCTURES)
     this.memory.container = containerId
     if (!containerId) {
-      log(`[${this.room.name}][${this.name}] Container not found`, LOG_INFO, 'STATIC_RHARV')
+      log(nocontainererrmsg, LOG_INFO, 'STATIC_RHARV')
       if (!this.memory.destConstSite) {
         const conSiteId = this.lookArround(LOOK_CONSTRUCTION_SITES)
         if (!conSiteId) {
           this.room.createConstructionSite(this.pos.x, this.pos.y, STRUCTURE_CONTAINER)
           this.memory.destConstSite = this.lookArround(LOOK_CONSTRUCTION_SITES)
         } // !conSiteId
+        this.memory.building = true
+        this.memory.role = 'buil'
+        return this.roleBuilder()
       } // !this.memory.destConstSite
     } // !containerId
   } // !this.memory.container
 
+  const source = Game.getObjectById(this.memory.source)
+  if (!source) return log(nosrcerrmsg, LOG_WARN, 'STATIC_RHARV')
 
+  const container = Game.getObjectById(this.memory.container)
+  if (!container) {
+    log(nocontainererrmsg, LOG_WARN, 'STATIC_RHARV')
+    this.memory.container = false
+    return
+  }
 
+  if (this.store.getFreeCapacity === 0 && container.hits < container.hitsMax) {
+    return this.repair(container)
+  }
+
+  this.harvest(source)
 } // roleStaticRharv
-
 
 Creep.prototype.roleMason = function () {
   let strucTypes = [STRUCTURE_WALL, STRUCTURE_RAMPART]
@@ -269,7 +288,6 @@ Creep.prototype.roleClaimer = function () {
   }
   return this.reserveController(ctlr)
 }
-
 
 Creep.prototype.roleRemoteHarvester = function () {
   const remotePos = this.memory.remotePos
@@ -476,6 +494,7 @@ Creep.prototype.goBuild = function (tryFind = true) {
   if (!constructSite) {
     this.memory.role = this.name.split('_')[0]
     this.memory.building = false
+    this.memory.destConstSite = false
     return
   }
 
