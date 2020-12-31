@@ -10,12 +10,12 @@ Room.prototype.genHwayId = function (Pos) {
   return `${Pos.x}${Pos.y}`
 }
 
-Room.prototype.addHighway = function (homePos, destPos) {
-  if (!homePos || !destPos) return false
+Room.prototype.addHighway = function (homePos, remotePos) {
+  if (!homePos || !remotePos) return false
   if (typeof homePos === 'string') homePos = Game.getObjectById(homePos).pos
-  if (typeof destPos === 'string') destPos = Game.getObjectById(destPos).pos
+  if (typeof remotePos === 'string') remotePos = Game.getObjectById(remotePos).pos
 
-  const hwayId = this.genHwayId(destPos)
+  const hwayId = this.genHwayId(remotePos)
 
   if (this.getHighway(hwayId)) {
     log(`[${this.name}]${hwayId} already exists`, LOG_WARN, 'HIGHWAYS')
@@ -23,9 +23,10 @@ Room.prototype.addHighway = function (homePos, destPos) {
   }
 
   const lane = PathFinder.search(
-    homePos, destPos, { swampCost: 2, ignoreCreeps: true, ignoreRoads: true }
+    homePos, remotePos, { swampCost: 2, ignoreCreeps: true, ignoreRoads: true }
   )
-  this.memory.Highways[hwayId] = { homePos: homePos, destPos: destPos, lane: lane }
+  log(JSON.stringify(lane), LOG_FATAL)
+  this.memory.Highways[hwayId] = lane.path
   log(`[${this.name}]${hwayId} added`, LOG_WARN, 'HIGHWAYS')
 
   return true
@@ -48,4 +49,17 @@ Room.prototype.removeFlags = function (prefix) {
   _.forEach(_.filter(Game.flags, flg => flg.name.split('_')[0] === prefix), flg => flg.remove())
 }
 
-// Game.rooms['W8S17'].addHighway('5fe61bfdc1ac9af95e162e4c', '5bbcac649099fc012e63562f')
+/*
+Reset roads
+Game.rooms['W8S17'].cleanHways()
+
+Reset flags
+Game.rooms['W8S17'].removeFlags('146')
+
+Test road
+Game.rooms['W8S17'].addHighway('5fe61bfdc1ac9af95e162e4c', '5bbcac649099fc012e63562f')
+
+Test creep
+Game.spawns['Spawn8'].easySpawnCreep({role: 'truck', body: [MOVE, CARRY]})
+
+*/

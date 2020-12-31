@@ -12,7 +12,7 @@ const SpawnQueue = require('SpawnQueue')
 function every300Ticks () {
   if (Game.time % 300 !== 0) { return }
   log('Runnig 300 Tks Maintenance', LOG_DEBUG)
-  balanceCreeps()
+  //balanceCreeps()
 
   let name
   for (name in Memory.creeps) {

@@ -56,6 +56,33 @@ function allowedStorages (storages) {
   return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
+Creep.prototype.roleEuroTruck = function () {
+  const road = Game.rooms[this.memory.default_room].getHighway(146)
+  if (!road) {
+    log(`[${this.room.name}]${this.name}:No road found`, LOG_WARN, 'HIGHWAYS')
+    return
+  }
+  let action, dest
+  if (this.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+    action = 'withdraw'
+    dest = road[road.length -1]
+  } else {
+    action = 'transfer'
+    dest = road[0]
+  }
+  
+  dest = new RoomPosition(dest.x, dest.y, dest.roomName)
+  if (this.pos.isNearTo(dest)) {
+    const target = this.room.lookForAtArea(
+      LOOK_STRUCTURES, dest.y - 1, dest.x - 1, dest.y + 1, dest.x + 1, true
+    )
+    return this[action](target[0].structure, RESOURCE_ENERGY)
+  }
+  this.moveTo(dest, { reusePath: 100 }) 
+
+}
+
+
 Creep.prototype.roleMason = function () {
   let strucTypes = [STRUCTURE_WALL, STRUCTURE_RAMPART]
   if (this.ticksToLive > 1200) strucTypes = [STRUCTURE_ROAD]
