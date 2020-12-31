@@ -152,6 +152,8 @@ Creep.prototype.roleMason = function () {
   let strucTypes = [STRUCTURE_WALL, STRUCTURE_RAMPART]
   if (this.ticksToLive > 1200) strucTypes = [STRUCTURE_ROAD]
 
+  if (this.shouldFlee()) return this.moveTo(Game.getObjectById(this.memory.default_spawn))
+
   if (this.store.getUsedCapacity() === 0) {
     this.memory.building = false
     this.memory.goingTo = false
@@ -294,7 +296,7 @@ Creep.prototype.roleRemoteHarvester = function () {
   if (!remotePos) return
 
   if (this.shouldFlee()) {
-    this.memory.role = 'upgr'
+    this.memory.role = 'mason'
     this.memory.goingTo = this.memory.default_spawn
     return this.moveTo(Game.getObjectById(this.memory.default_spawn))
   }
