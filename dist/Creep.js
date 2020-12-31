@@ -49,6 +49,8 @@ Creep.prototype.run = function () {
       return this.roleMason()
     case 'trader':
       return this.roleTrader()
+    case 'srharv':
+      return this.roleStaticRharv()
   }
 }
 
@@ -72,15 +74,59 @@ Creep.prototype.roleEuroTruck = function () {
   }
   
   dest = new RoomPosition(dest.x, dest.y, dest.roomName)
-  if (this.pos.isNearTo(dest)) {
+  if (this.pos.inRangeTo(dest, 2)) {
     const target = this.room.lookForAtArea(
       LOOK_STRUCTURES, dest.y - 1, dest.x - 1, dest.y + 1, dest.x + 1, true
     )
-    return this[action](target[0].structure, RESOURCE_ENERGY)
+    this[action](target[0].structure, RESOURCE_ENERGY)
   }
   this.moveTo(dest, { reusePath: 100 }) 
 
 }
+
+Creep.prototype.lookArround = function(lookType) {
+  const target = this.room.lookForAtArea(
+    lookType, this.pos.y - 1, this.pos.x - 1, this.pos.y + 1, this.pos.x + 1, true
+  )
+  return _.get(target, '[0].structure.id', false)
+}
+
+Creep.prototype.roleStaticRharv = function () {
+  const rPos = this.memory.remotePos
+  if (!rPos) return
+
+  const remotePos = new RoomPosition(rPos.x, rPos.y, rPos.roomName)
+
+  if (rPos.roomName !== this.room.name || !this.pos.inRangeTo(remotePos, 0)) {
+    return this.moveTo(remotePos) 
+  }
+
+  if (!this.memory.source) {
+    const sourceId = this.lookArround(LOOK_SOURCES)
+    this.memory.source = sourceId
+    if (!sourceId) {
+      return log(`[${this.room.name}][${this.name}] Source not found`, LOG_WARN, 'STATIC_RHARV')
+    }
+  }
+
+  if (!this.memory.container) {
+    const containerId = this.lookArround(LOOK_STRUCTURES)
+    this.memory.container = containerId
+    if (!containerId) {
+      log(`[${this.room.name}][${this.name}] Container not found`, LOG_INFO, 'STATIC_RHARV')
+      if (!this.memory.destConstSite) {
+        const conSiteId = this.lookArround(LOOK_CONSTRUCTION_SITES)
+        if (!conSiteId) {
+          this.room.createConstructionSite(this.pos.x, this.pos.y, STRUCTURE_CONTAINER)
+          this.memory.destConstSite = this.lookArround(LOOK_CONSTRUCTION_SITES)
+        } // !conSiteId
+      } // !this.memory.destConstSite
+    } // !containerId
+  } // !this.memory.container
+
+
+
+} // roleStaticRharv
 
 
 Creep.prototype.roleMason = function () {
@@ -224,10 +270,6 @@ Creep.prototype.roleClaimer = function () {
   return this.reserveController(ctlr)
 }
 
-Creep.prototype.roleStaticRharv = function () {
-  const remotePos = this.memory.remotePos
-  if (!remotePos) return
-}
 
 Creep.prototype.roleRemoteHarvester = function () {
   const remotePos = this.memory.remotePos

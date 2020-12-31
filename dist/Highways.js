@@ -60,6 +60,8 @@ Test road
 Game.rooms['W8S17'].addHighway('5fe61bfdc1ac9af95e162e4c', '5bbcac649099fc012e63562f')
 
 Test creep
-Game.spawns['Spawn8'].easySpawnCreep({role: 'truck', body: [MOVE, CARRY]})
+Game.spawns['Spawn8'].easySpawnCreep({role: 'truck', body: [MOVE, MOVE, CARRY, CARRY]})
+
+Game.spawns['Spawn8'].easySpawnCreep({role: 'srharv', body: [MOVE, MOVE, CARRY, CARRY, WORK, WORK]})
 
 */
