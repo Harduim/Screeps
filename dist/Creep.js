@@ -146,7 +146,10 @@ Creep.prototype.roleStaticRharv = function () {
     return
   }
 
-  if (this.store.getFreeCapacity() === 0 && container.hits < container.hitsMax) {
+  if (container.hits < container.hitsMax) {
+    if (this.store.getUsedCapacity() === 0 && container.store.getUsedCapacity() > this.store.getCapacity()) {
+      return this.withdraw(container, RESOURCE_ENERGY)
+    }
     return this.repair(container)
   }
 
