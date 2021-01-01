@@ -78,7 +78,7 @@ Creep.prototype.roleEuroTruck = function () {
     const target = this.room.lookForAtArea(
       LOOK_STRUCTURES, dest.y - 1, dest.x - 1, dest.y + 1, dest.x + 1, true
     )
-    this[action](target[0].structure, RESOURCE_ENERGY)
+    if (target.length > 0) this[action](target[0].structure, RESOURCE_ENERGY)
   }
   this.moveTo(dest, { reusePath: 100 })
 }
@@ -87,12 +87,17 @@ Creep.prototype.lookArround = function (lookType) {
   const target = this.room.lookForAtArea(
     lookType, this.pos.y - 1, this.pos.x - 1, this.pos.y + 1, this.pos.x + 1, true
   )
-  return _.get(target, '[0].structure.id', false)
+  const objPath = `[0].${lookType}.id`
+  return _.get(target, objPath, false)
 }
 
 Creep.prototype.roleStaticRharv = function () {
   const rPos = this.memory.remotePos
-  if (!rPos) return
+  if (!rPos) {
+    // DEV GAMBI
+    this.memory.remotePos = { x: 14, y: 7, roomName: 'W9S17' }
+    return
+  }
 
   const remotePos = new RoomPosition(rPos.x, rPos.y, rPos.roomName)
 
@@ -118,16 +123,16 @@ Creep.prototype.roleStaticRharv = function () {
     this.memory.container = containerId
     if (!containerId) {
       log(nocontainererrmsg, LOG_INFO, 'STATIC_RHARV')
+      this.memory.building = true
+      this.memory.role = 'buil'
       if (!this.memory.destConstSite) {
         const conSiteId = this.lookArround(LOOK_CONSTRUCTION_SITES)
         if (!conSiteId) {
           this.room.createConstructionSite(this.pos.x, this.pos.y, STRUCTURE_CONTAINER)
           this.memory.destConstSite = this.lookArround(LOOK_CONSTRUCTION_SITES)
         } // !conSiteId
-        this.memory.building = true
-        this.memory.role = 'buil'
-        return this.roleBuilder()
       } // !this.memory.destConstSite
+      return this.roleBuilder()
     } // !containerId
   } // !this.memory.container
 
