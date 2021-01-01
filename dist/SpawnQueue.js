@@ -18,7 +18,7 @@ class SpawnQueue {
       return
     }
     const roomQ = this.getRoomQueue(roomName)
-    log(`addCreep ${role} ${energy} ${priority}`, LOG_FATAL, roomName)
+    log(`addCreep ${role} ${energy} ${priority}`, LOG_DEBUG, roomName)
     roomQ.push({ priority, roomName, role, energy, body, memory })
     roomQ.sort((a, b) => b.priority - a.priority)
   }
