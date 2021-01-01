@@ -33,13 +33,13 @@ Room.prototype.addHighway = function (homePos, remotePos) {
 }
 
 Room.prototype.buildHway = function (HwayId) {
-  const laneKey = `Highways.${HwayId}.lane`
+  const laneKey = `Highways.${HwayId}`
   const lane = _.get(this.memory, laneKey, false)
   if (!lane) {
-    log(`[${this.name}]${hwayId} unable to find lane`, LOG_WARN, 'HIGHWAYS')
+    log(`[${this.name}]${HwayId} unable to find lane`, LOG_WARN, 'HIGHWAYS')
   }
   let step
-  for (step of lane.path) {
+  for (step of lane) {
     // this.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
     Game.rooms[step.roomName].createFlag(step.x, step.y, `${HwayId}_${step.x}${step.y}`)
   }
@@ -55,6 +55,7 @@ Game.rooms['W8S17'].cleanHways()
 
 Reset flags
 Game.rooms['W8S17'].removeFlags('146')
+Game.rooms['W8S17'].buildHway('146')
 
 Test road
 Game.rooms['W8S17'].addHighway('5fe61bfdc1ac9af95e162e4c', '5bbcac649099fc012e63562f')
@@ -62,6 +63,6 @@ Game.rooms['W8S17'].addHighway('5fe61bfdc1ac9af95e162e4c', '5bbcac649099fc012e63
 Test creep
 Game.spawns['Spawn8'].easySpawnCreep({role: 'truck', body: [MOVE, MOVE, CARRY, CARRY]})
 
-Game.spawns['Spawn8'].easySpawnCreep({role: 'srharv', body: [MOVE, MOVE, CARRY, CARRY, WORK, WORK]})
+Game.spawns['Spawn8'].easySpawnCreep({role: 'srharv', body: [MOVE, MOVE, CARRY, WORK, WORK]})
 
 */
