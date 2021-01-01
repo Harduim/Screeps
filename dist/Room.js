@@ -83,7 +83,7 @@ Room.prototype.roomCoordinator = function () {
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote('rharv', 4)
   }
-  log(`Queue ${SpawnQueue.queueToString(this.name)}`, LOG_WARN, this.name)
+  log(`Queue: ${SpawnQueue.queueToString(this.name)}`, LOG_INFO, this.name)
   structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
@@ -91,7 +91,7 @@ Room.prototype.census = function (creepsOwned) {
   this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role)
   this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split('_')[0])
 
-  log(`Census =>${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
+  log(`Census: ${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
   if (this.energyCapacityAvailable < ENERGYDIVIDER) {
     this.memory.harvMax = this.memory.sourcesCount + 2

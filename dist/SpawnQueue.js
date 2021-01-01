@@ -71,7 +71,7 @@ class SpawnQueue {
     let msg = ''
     let pc
     for (pc of roomQ) msg = msg + `[${pc.role}:${pc.energy}],`
-    return msg
+    return msg === '' ? '[]' : msg
   }
 
   toString () {
