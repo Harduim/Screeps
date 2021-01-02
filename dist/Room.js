@@ -1,6 +1,7 @@
 Room.prototype.run = function run () {
   if (!this.controller || !this.controller.level || !this.controller.my) return
   this.memory.sourcesCount = this.memory.sourcesCount || this.find(FIND_SOURCES).length
+  if (!this.memory.Highways) this.memory.Highways = {}
 
   this.runTaksSchedule(
     [
@@ -14,6 +15,11 @@ Room.prototype.run = function run () {
       { controllerLvl: [5, 8], schedule: 1000, name: 'queueRemote', args: ['claim', 5, [MOVE, MOVE, CLAIM, CLAIM]] }
     ]
   )
+}
+
+Room.prototype.storEnergy = function () {
+  if (!this.storage) return 0
+  return this.storage.store.getUsedCapacity(RESOURCE_ENERGY)
 }
 
 Room.prototype.nameToInt = function () {
@@ -77,7 +83,7 @@ Room.prototype.roomCoordinator = function () {
   if (this.energyAvailable === this.energyCapacityAvailable) {
     this.queueRemote('rharv', 4)
   }
-  log(`Queue ${SpawnQueue.queueToString(this.name)}`, LOG_WARN, this.name)
+  log(`Queue: ${SpawnQueue.queueToString(this.name)}`, LOG_INFO, this.name)
   structs.filter(strc => strc.structureType === STRUCTURE_SPAWN && strc.consumeQueue())
 }
 
@@ -85,7 +91,7 @@ Room.prototype.census = function (creepsOwned) {
   this.memory.censusByRole = _.countBy(creepsOwned, crp => crp.memory.role)
   this.memory.censusByPrefix = _.countBy(creepsOwned, crp => crp.name.split('_')[0])
 
-  log(`Census =>${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
+  log(`Census: ${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
   if (this.energyCapacityAvailable < ENERGYDIVIDER) {
     this.memory.harvMax = this.memory.sourcesCount + 2
@@ -94,7 +100,7 @@ Room.prototype.census = function (creepsOwned) {
     this.memory.maxBasicSize = 1600
   } else {
     this.memory.harvMax = this.memory.sourcesCount
-    this.memory.upgrMax = 1
+    this.memory.upgrMax = this.storEnergy() > 50000 ? 2 : 1
     this.memory.builMax = 1
     this.memory.maxBasicSize = 2200
   }
@@ -175,10 +181,7 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
     return
   }
   const buildCount = this.memory.censusByRole.buil || 0
-  if (this.storage) {
-    const storageUsedCapacity = this.storage.store.getUsedCapacity(RESOURCE_ENERGY)
-    if (storageUsedCapacity < this.energyCapacityAvailable || buildCount > 0) return
-  }
+  if (this.storEnergy() < this.energyCapacityAvailable || buildCount > 0) return
 
   // Harv => Builder
   if (constSites.length > 0 && buildCount < this.memory.builMax) {
@@ -268,7 +271,7 @@ Room.prototype.runTowers = function () {
       tower.repair(lessHits(nonWallDamaged))
     }
 
-    if (towers.length === 0 || !(this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 30000)) return
+    if (towers.length === 0 || !this.storEnergy() > 30000) return
 
     const damaged = _.filter(structs, struc => strucWallRampart.includes(struc.structureType) && struc.hits < struc.hitsMax)
     const target = lessHits(damaged)
@@ -399,7 +402,7 @@ Room.prototype.defend = function () {
       crp.owner.username !== 'Invader' &&
       (crp.getActiveBodyparts(ATTACK) > 0 || crp.getActiveBodyparts(RANGED_ATTACK) > 0)
   })
-  if (enemyCreeps.length == 0) return
+  if (enemyCreeps.length === 0) return
 
   const squad = this.nameToInt()
   const limit = 2

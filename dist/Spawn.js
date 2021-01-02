@@ -35,7 +35,7 @@ Spawn.prototype.memoryBuilder = function (role, remotePos = false) {
   }
 }
 
-Spawn.prototype.easySpawnCreep = function ({ role, energy, body = false, memory = false }) {
+Spawn.prototype.easySpawnCreep = function ({ role, energy = 301, body = false, memory = false }) {
   energy = energy < this.room.memory.maxBasicSize ? energy : this.room.memory.maxBasicSize
 
   if (energy < 300) return ERR_NOT_ENOUGH_ENERGY
