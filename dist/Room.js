@@ -45,7 +45,7 @@ Room.prototype.runTaksSchedule = function (tasks) {
   }
 }
 
-Room.prototype.creepCount = function(role, by='Prefix') {
+Room.prototype.creepCount = function (role, by = 'Prefix') {
   return _.get(this.memory, `censusBy${by}.${role}`, 0)
 }
 
@@ -69,9 +69,7 @@ Room.prototype.roomCoordinator = function () {
   const controllerId = this.controller.id
   const structs = this.find(FIND_MY_STRUCTURES)
   const constSites = this.find(FIND_CONSTRUCTION_SITES)
-  const creepsOwned = _.filter(Game.creeps, creep => (
-    creep.memory.default_controller === controllerId && creep.name.split('_')[0] !== 'seed'
-  ))
+  const creepsOwned = _.filter(Game.creeps, creep => creep.memory.default_controller === controllerId)
 
   this.census(creepsOwned)
   this.queueBasics()
@@ -136,7 +134,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
         - If there is no Buff, a Linker should assume the Buff role.
         - If there a Linker on the buff role and Buff exists Linker should switch back to linker role.
     */
-  
+
   if (this.creepCount('linker', 'Role') === 0 || !this.storage) return
 
   if (this.creepCount('buff', 'Role') === 0) {
@@ -171,23 +169,19 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
   const pHarvs = this.creepFilterByPrefix('harv', creepsOwned)
   let balance = false
   if (this.storage) {
-    if (this.creepCount('buff', 'Role') === 0) {
+    if (this.creepCount('buff', 'Role') === 0 || this.storEnergy() < this.energyCapacityAvailable) {
       balance = true
     }
   } else {
-    if (this.energyAvailable < this.energyCapacityAvailable) {
-      balance = true
-    }
+    if (this.energyAvailable < this.energyCapacityAvailable) balance = true
   }
   if (balance) {
     _.forEach(pHarvs, function (harv) { harv.memory.role = 'harv' })
     return
   }
-  const buildCount = this.creepCount('buil', 'Role')
-  if ((this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) < this.energyCapacityAvailable) || buildCount > 0) return
 
   // Harv => Builder
-  if (constSites.length > 0 && buildCount < this.memory.builMax) {
+  if (constSites.length > 0 && this.creepCount('buil', 'Role') < this.memory.builMax) {
     let builder
     const harvs = rHarvs.length === 0 ? pHarvs : rHarvs
     if (harvs.length > 0) {
