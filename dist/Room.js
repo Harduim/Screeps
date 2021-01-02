@@ -45,6 +45,10 @@ Room.prototype.runTaksSchedule = function (tasks) {
   }
 }
 
+Room.prototype.creepCount = function(role, by='Prefix') {
+  return _.get(this.memory, `censusBy${by}.${role}`, 0)
+}
+
 Room.prototype.creepFilterByRole = function (role, creepList) {
   return _.filter(creepList, crp => crp.memory.role === role)
 }
@@ -118,9 +122,7 @@ Room.prototype.structureCensus = function (structs) {
   if ((!this.memory.mainLink || !Game.getObjectById(this.memory.mainLink.id)) && mStorage) {
     const mlFilter = strc => strc.structureType === STRUCTURE_LINK && strc.pos.inRangeTo(mStorage, 5)
     const mLink = _.filter(structs, mlFilter)
-    if (mLink.length > 0) {
-      this.memory.mainLink = mLink[0]
-    }
+    if (mLink.length > 0) this.memory.mainLink = mLink[0]
   }
   if (mStorage) {
     const blFilter = strc => strc.structureType === STRUCTURE_LINK && !strc.pos.inRangeTo(mStorage, 5)
@@ -134,9 +136,10 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
         - If there is no Buff, a Linker should assume the Buff role.
         - If there a Linker on the buff role and Buff exists Linker should switch back to linker role.
     */
-  if ((this.memory.censusByRole.linker || 0) === 0 || !this.storage) return
+  
+  if (this.creepCount('linker', 'Role') === 0 || !this.storage) return
 
-  if ((this.memory.censusByRole.buff || 0) === 0) {
+  if (this.creepCount('buff', 'Role') === 0) {
     const linker = this.creepFilterByRole('linker', creepsOwned)[0]
     linker.memory.role = 'buff'
     log(`${linker.name} => buff`, LOG_DEBUG, this.name)
@@ -145,7 +148,7 @@ Room.prototype.buffLinkerDirectives = function (creepsOwned, structs) {
 
   const linksActive = strc => strc.structureType === STRUCTURE_LINK && strc.store.energy > 0 && strc.cooldown <= 5
 
-  if ((this.memory.censusByRole.buff || 0) > 0 && _.filter(structs, linksActive).length > 0) {
+  if (this.creepCount('buff', 'Role') > 0 && _.filter(structs, linksActive).length > 0) {
     const linkersBuff = _.filter(
       creepsOwned, crp => crp.memory.role === 'buff' && crp.name.split('_')[0] === 'linker'
     )
@@ -168,7 +171,7 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
   const pHarvs = this.creepFilterByPrefix('harv', creepsOwned)
   let balance = false
   if (this.storage) {
-    if ((this.memory.censusByRole.buff || 0) === 0) {
+    if (this.creepCount('buff', 'Role') === 0) {
       balance = true
     }
   } else {
@@ -180,8 +183,8 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
     _.forEach(pHarvs, function (harv) { harv.memory.role = 'harv' })
     return
   }
-  const buildCount = this.memory.censusByRole.buil || 0
-  if (this.storEnergy() < this.energyCapacityAvailable || buildCount > 0) return
+  const buildCount = this.creepCount('buil', 'Role')
+  if ((this.storage && this.storage.store.getUsedCapacity(RESOURCE_ENERGY) < this.energyCapacityAvailable) || buildCount > 0) return
 
   // Harv => Builder
   if (constSites.length > 0 && buildCount < this.memory.builMax) {
@@ -206,8 +209,8 @@ Room.prototype.harvUpgrBuilDirectives = function (creepsOwned, constSites) {
 
 Room.prototype.queueBasics = function () {
   const minEnergy = this.energyAvailable > 300 ? this.energyAvailable : 300
-  const harvCount = this.memory.censusByPrefix.harv || 0
-  const upgrCount = this.memory.censusByPrefix.upgr || 0
+  const harvCount = this.creepCount('harv')
+  const upgrCount = this.creepCount('upgr')
   let harvQ = SpawnQueue.getCountByRole('harv', this.name)
   let upgrQ = SpawnQueue.getCountByRole('upgr', this.name)
   log(`hq:${harvQ} uq:${upgrQ}`, LOG_DEBUG, this.name)
