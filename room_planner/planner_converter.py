@@ -24,6 +24,9 @@ for building, coords in orig_json.items():
 
         new_json[building].append({"x": x_offset, "y": y_offset, "dist": dist})
 
+for building, coords in new_json.items():
+    new_json[building] = sorted(coords, key=lambda by: by['dist'])
+
 
 with open(NEW_JSON, "w") as nj:
     nj.write(dumps(new_json))
