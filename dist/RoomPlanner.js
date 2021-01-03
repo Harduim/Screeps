@@ -182,7 +182,7 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
     if (mSpawn) this.memory.baseCenter = mSpawn[0].pos
   }
   const bc = this.memory.baseCenter
-  const strCount = structs.filter(strc => strc.strType === strType).length
+  const strCount = structs.filter(strc => strc.structureType === strType).length
   const offset = BASE_LAYOUT[strType][strCount]
   const ox = offset.x
   const oy = offset.y
@@ -191,8 +191,9 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
   const { x, y } = pos
   const i = 0
   const maxTries = 10
-  if (constSites) return
+  if (constSites.length > 0) return
   const builResult = this.createConstructionSite(x + ox, y + oy, strType)
+  log(`${builResult} ${x}|${y} ${ox}|${oy}`)
 }
 
 Room.prototype.posOccupied = function (pos) {
