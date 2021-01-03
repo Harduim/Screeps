@@ -147,3 +147,27 @@ const BASE_LAYOUT = {
     { x: 0, y: -2, dist: 2 }
   ]
 }
+
+Room.prototype.drawSquare = function (x = 25, y = 25, squareSize = 9) {
+  // Game.rooms['W1S18'].removeFlags('square')
+  let i
+  for (i = 0; i <= squareSize; i++) {
+    this.createFlag(x + i, y, `square_${x + i}${y}`)
+    this.createFlag(x + i, y + squareSize, `square_${x + i}${y + squareSize}`)
+    this.createFlag(x, y + i, `square_${x}${y + i}`)
+    this.createFlag(x + squareSize, y + i, `square_${x + squareSize}${y + i}`)
+  }
+}
+
+Room.prototype.drawBaseLayout = function (x = 25, y = 25) {
+  this.removeFlags('l')
+  let crds
+  for (crds of BASE_LAYOUT.road) {
+    // this.createFlag(crds.x + x, crds.y + y, `l_${crds.x}${crds.y}`, COLOR_GREY)
+    this.visual.circle(crds.x + x, crds.y + y)
+  }
+  for (crds of BASE_LAYOUT.spawn) {
+    this.createFlag(crds.x + x, crds.y + y, `l_${crds.x}${crds.y}`, COLOR_RED)
+    this.visual.circle(crds.x + x, crds.y + y, { stroke: COLOR_RED })
+  }
+}

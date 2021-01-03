@@ -15,8 +15,8 @@ new_json = {}
 for building, coords in orig_json.items():
     for i, coord in enumerate(coords["pos"]):
         (_, x_val), (_, y_val) = coord.items()
-        x_offset = ANRCHOR_POINT["x"] - x_val
-        y_offset = ANRCHOR_POINT["y"] - y_val
+        x_offset = x_val - ANRCHOR_POINT["x"]
+        y_offset = y_val - ANRCHOR_POINT["y"]
         dist = abs(y_offset) if abs(y_offset) > abs(x_offset) else abs(x_offset)
 
         if building not in new_json.keys():
