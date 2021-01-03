@@ -167,7 +167,21 @@ Room.prototype.drawBaseLayout = function (x = 25, y = 25) {
     this.visual.circle(crds.x + x, crds.y + y)
   }
   for (crds of BASE_LAYOUT.spawn) {
-    //this.createFlag(crds.x + x, crds.y + y, `l_${crds.x}${crds.y}`, COLOR_RED)
+    // this.createFlag(crds.x + x, crds.y + y, `l_${crds.x}${crds.y}`, COLOR_RED)
     this.visual.circle(crds.x + x, crds.y + y, { stroke: COLOR_RED })
   }
+}
+
+Room.prototype.buildNext = function (strcType) {
+  if (!this.memory.baseCenter) return
+}
+
+Room.prototype.posOccupied = function (pos) {
+  if (pos.lookFor(LOOK_STRUCTURES).length > 0) return true
+  if (pos.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
+}
+
+Room.prototype.nearWall = function (pos) {
+  if (pos.lookFor(LOOK_STRUCTURES).length > 0) return true
+  if (pos.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
 }

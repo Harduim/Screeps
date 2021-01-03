@@ -96,13 +96,13 @@ Room.prototype.census = function (creepsOwned) {
   log(`Census: ${JSON.stringify(this.memory.censusByPrefix)}`, LOG_INFO, this.name)
 
   if (this.energyCapacityAvailable < ENERGYDIVIDER) {
-    this.memory.harvMax = this.memory.sourcesCount + 2
-    this.memory.upgrMax = this.memory.sourcesCount
-    this.memory.builMax = this.memory.sourcesCount + 1
+    this.memory.harvMax = this.memory.sourcesCount + 3
+    this.memory.upgrMax = this.memory.sourcesCount + 1
+    this.memory.builMax = this.memory.sourcesCount + 2
     this.memory.maxBasicSize = 1600
   } else {
-    this.memory.harvMax = this.memory.sourcesCount
-    this.memory.upgrMax = this.storEnergy() > 50000 ? 2 : 1
+    this.memory.harvMax = this.memory.sourcesCount + 1
+    this.memory.upgrMax = this.storEnergy() > 50000 ? 3 : 2
     this.memory.builMax = 1
     this.memory.maxBasicSize = 2200
   }
@@ -125,6 +125,14 @@ Room.prototype.structureCensus = function (structs) {
   if (mStorage) {
     const blFilter = strc => strc.structureType === STRUCTURE_LINK && !strc.pos.inRangeTo(mStorage, 5)
     this.memory.borderLinks = _.filter(structs, blFilter)
+  }
+
+  // Base center
+  if (!this.memory.baseCenter) {
+    const mainSpawn = structs.filter(
+      strc => strc.structureType === STRUCTURE_SPAWN && strc.memory.main === true
+    )
+    if (mainSpawn.length > 0) this.memory.baseCenter = mainSpawn.pos
   }
 }
 

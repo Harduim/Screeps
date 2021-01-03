@@ -6,6 +6,7 @@ require('StructureTower')
 require('overrides')
 require('Highways')
 require('RoomPlanner')
+require('RoomPosition')
 
 const log = require('logger')
 const SpawnQueue = require('SpawnQueue')
