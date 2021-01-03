@@ -188,7 +188,7 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
   if (constSites.length > 0) return
   let strCount = structs.filter(strc => strc.structureType === strType).length
 
-  if (CONTROLLER_STRUCTURES[strType] >= strCount) return
+  if (CONTROLLER_STRUCTURES[strType][this.controller.level] <= strCount) return
 
   let i, offset, ox, oy, tryPos, buildResult
   for (i = 0; i < BASE_LAYOUT[strType].length; i++) {
@@ -198,14 +198,12 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
     tryPos = new RoomPosition(ox, oy, bc.roomName)
     this.visual.circle(ox, oy, {fill: 'solid', color: COLOR_RED})
 
-    // if (tryPos.isWallAdjacent() || tryPos.isOccupied()) {
-      if (tryPos.isOccupied()) {
+    if (tryPos.isWallAdjacent() || tryPos.isOccupied()) {
       i++
       strCount++
       continue
     }
     buildResult = this.createConstructionSite(ox, oy, strType)
-    log(buildResult)
     if (buildResult === OK) return
     i++
     strCount++
