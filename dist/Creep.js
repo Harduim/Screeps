@@ -407,7 +407,7 @@ Creep.prototype.roleUpgrader = function () {
     if (this.upgradeController(ctrl) === ERR_NOT_IN_RANGE) this.moveTo(ctrl, { visualizePathStyle: { stroke: '#ffffff' } })
     return
   }
-  if (originalRole !== 'upgr' || (this.room.storage && this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 50000)) {
+  if (this.room.storage && this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 50000) {
     return this.goWithdraw()
   }
   return this.goHarvest()
