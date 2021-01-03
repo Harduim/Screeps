@@ -71,6 +71,7 @@ Room.prototype.roomCoordinator = function () {
   const constSites = this.find(FIND_CONSTRUCTION_SITES)
   const creepsOwned = _.filter(Game.creeps, creep => creep.memory.default_controller === controllerId)
 
+  this.buildNext(STRUCTURE_EXTENSION, structs, constSites)
   this.census(creepsOwned)
   this.queueBasics()
   this.structureCensus(structs)

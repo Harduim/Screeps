@@ -21,11 +21,10 @@ RoomPosition.prototype.isWallAdjacent = function () {
   const terrain = Game.map.getRoomTerrain(this.roomName)
   let pos
   for (pos of nearby) {
-    if (terrain.get(pos.x, pos.x) === TERRAIN_MASK_WALL) {
-        Game.rooms[this.roomName].visual.circle(pos.x, pos.y, { stroke: COLOR_RED, color: COLOR_RED, fill: 'solid'})
-        //return true
+    if (terrain.get(pos.x, pos.y) === 1) {
+      Game.rooms[this.roomName].visual.circle(pos.x, pos.y)
+      return true
     }
-    log(`${terrain.get(pos.x, pos.x)} ${pos}`)
   }
   return false
 }

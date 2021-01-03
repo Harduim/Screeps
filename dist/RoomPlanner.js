@@ -1,3 +1,5 @@
+const { max } = require('lodash')
+
 const BASE_LAYOUT = {
   road: [
     { x: 0, y: -1, dist: 1 },
@@ -172,8 +174,25 @@ Room.prototype.drawBaseLayout = function (x = 25, y = 25) {
   }
 }
 
-Room.prototype.buildNext = function (strcType) {
-  if (!this.memory.baseCenter) return
+Room.prototype.buildNext = function (strType, structs, constSites) {
+  if (!this.memory.baseCenter) {
+    const mSpawn = structs.filter(
+      spn => spn.structureType === STRUCTURE_SPAWN && (spn.memory && spn.memory.main === true)
+    )
+    if (mSpawn) this.memory.baseCenter = mSpawn[0].pos
+  }
+  const bc = this.memory.baseCenter
+  const strCount = structs.filter(strc => strc.strType === strType).length
+  const offset = BASE_LAYOUT[strType][strCount]
+  const ox = offset.x
+  const oy = offset.y
+
+  const pos = new RoomPosition(bc.x, bc.y, bc.roomName)
+  const { x, y } = pos
+  const i = 0
+  const maxTries = 10
+  if (constSites) return
+  const builResult = this.createConstructionSite(x + ox, y + oy, strType)
 }
 
 Room.prototype.posOccupied = function (pos) {
