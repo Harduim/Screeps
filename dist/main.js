@@ -5,6 +5,7 @@ require('Creep')
 require('StructureTower')
 require('overrides')
 require('Highways')
+require('RoomPlanner')
 
 const log = require('logger')
 const SpawnQueue = require('SpawnQueue')
