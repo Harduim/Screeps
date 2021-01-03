@@ -33,8 +33,6 @@ module.exports.loop = function () {
   global.SpawnQueue = new SpawnQueue()
   every300Ticks()
 
-  Game.creeps.harv_31595466_300.pos.isWallAdjacent()
-
   if (Game.cpu.bucket < 500) {
     log('Extremely low bucket - skipping loop', LOG_FATAL)
     return
