@@ -179,29 +179,36 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
     const mSpawn = structs.filter(
       spn => spn.structureType === STRUCTURE_SPAWN && (spn.memory && spn.memory.main === true)
     )
-    if (mSpawn) this.memory.baseCenter = mSpawn[0].pos
+    if (mSpawn.length > 0) this.memory.baseCenter = mSpawn[0].pos
+    return
   }
   const bc = this.memory.baseCenter
-  const strCount = structs.filter(strc => strc.structureType === strType).length
-  const offset = BASE_LAYOUT[strType][strCount]
-  const ox = offset.x
-  const oy = offset.y
-
   const pos = new RoomPosition(bc.x, bc.y, bc.roomName)
   const { x, y } = pos
-  const i = 0
-  const maxTries = 10
   if (constSites.length > 0) return
-  const builResult = this.createConstructionSite(x + ox, y + oy, strType)
-  log(`${builResult} ${x}|${y} ${ox}|${oy}`)
-}
+  let strCount = structs.filter(strc => strc.structureType === strType).length
 
-Room.prototype.posOccupied = function (pos) {
-  if (pos.lookFor(LOOK_STRUCTURES).length > 0) return true
-  if (pos.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
-}
+  if (CONTROLLER_STRUCTURES[strType] >= strCount) return
 
-Room.prototype.nearWall = function (pos) {
-  if (pos.lookFor(LOOK_STRUCTURES).length > 0) return true
-  if (pos.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
+  let i, offset, ox, oy, tryPos, buildResult
+  for (i = 0; i < BASE_LAYOUT[strType].length; i++) {
+    offset = BASE_LAYOUT[strType][strCount]
+    ox = x + offset.x
+    oy = y + offset.y
+    tryPos = new RoomPosition(ox, oy, bc.roomName)
+    this.visual.circle(ox, oy, {fill: 'solid', color: COLOR_RED})
+
+    // if (tryPos.isWallAdjacent() || tryPos.isOccupied()) {
+      if (tryPos.isOccupied()) {
+      i++
+      strCount++
+      continue
+    }
+    buildResult = this.createConstructionSite(ox, oy, strType)
+    log(buildResult)
+    if (buildResult === OK) return
+    i++
+    strCount++
+  }
+  log(`Unable to build ${strType} [${strCount}] ${ox}/${oy} err:${buildResult}`, LOG_FATAL, this.name)
 }

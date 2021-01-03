@@ -13,12 +13,16 @@ Spawn.prototype.consumeQueue = function () {
   }
 
   log(`${this.name} Spawning ${protoCreep.role}`, LOG_WARN, this.room.name)
-  if (spnResult !== OK) {
-    log(`Spawn unsuccessful: ${spnResult}`, LOG_WARN)
-    SpawnQueue.addCreep(protoCreep)
+  switch (spnResult) {
+    case OK:
+      return OK
+    case ERR_NOT_ENOUGH_ENERGY:
+      log(`[${this.room.energyAvailable}/${this.room.energyCapacityAvailable}] Creep:${JSON.stringify(protoCreep)}`, LOG_WARN)
+      break
   }
 
-  return spnResult
+  SpawnQueue.addCreep(protoCreep)
+  log(`Spawn unsuccessful: ${spnResult}`, LOG_WARN)
 }
 
 Spawn.prototype.memoryBuilder = function (role, remotePos = false) {
