@@ -11,7 +11,6 @@ Room.prototype.run = function run () {
       { controllerLvl: [1, 8], schedule: 3, name: 'roomCoordinator', args: false },
       { controllerLvl: [2, 8], schedule: 16, name: 'defend', args: false },
       { controllerLvl: [3, 3], schedule: 51, name: 'controllerRoadMaker', args: false },
-      { controllerLvl: [3, 8], schedule: 52, name: 'towerMaker', args: false },
       { controllerLvl: [5, 8], schedule: 1000, name: 'queueRemote', args: ['claim', 5, [MOVE, MOVE, CLAIM, CLAIM]] }
     ]
   )
@@ -72,6 +71,7 @@ Room.prototype.roomCoordinator = function () {
   const creepsOwned = _.filter(Game.creeps, creep => creep.memory.default_controller === controllerId)
 
   this.buildNext(STRUCTURE_EXTENSION, structs, constSites)
+  this.buildNext(STRUCTURE_TOWER, structs, constSites)
   this.census(creepsOwned)
   this.queueBasics()
   this.structureCensus(structs)
