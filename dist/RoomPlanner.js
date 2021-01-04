@@ -1,5 +1,3 @@
-const { max } = require('lodash')
-
 const BASE_LAYOUT = {
   road: [
     { x: 0, y: -1, dist: 1 },
@@ -196,7 +194,7 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
     ox = x + offset.x
     oy = y + offset.y
     tryPos = new RoomPosition(ox, oy, bc.roomName)
-    this.visual.circle(ox, oy, {fill: 'solid', color: COLOR_RED})
+    this.visual.circle(ox, oy, { fill: 'solid', color: COLOR_RED })
 
     if (tryPos.isWallAdjacent() || tryPos.isOccupied()) {
       i++
@@ -209,4 +207,15 @@ Room.prototype.buildNext = function (strType, structs, constSites) {
     strCount++
   }
   log(`Unable to build ${strType} [${strCount}] ${ox}/${oy} err:${buildResult}`, LOG_FATAL, this.name)
+}
+
+Room.prototype.buildBaseRoads = function () {
+  if (!this.memory.baseCenter) return
+  if (this.memory.baseRoads) return
+  const bc = this.memory.baseCenter
+  let pos
+  for (pos of BASE_LAYOUT[road]) {
+    this.createConstructionSite(pos.x + bc.x, pos.y + bc.y, STRUCTURE_ROAD)
+  }
+  this.memory.baseRoads = true
 }

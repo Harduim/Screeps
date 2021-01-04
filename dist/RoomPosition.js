@@ -30,7 +30,6 @@ RoomPosition.prototype.isWallAdjacent = function () {
 }
 
 RoomPosition.prototype.isOccupied = function () {
-    if (this.lookFor(LOOK_STRUCTURES).length > 0) return true
-    if (this.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
-  }
-  
+  if (this.lookFor(LOOK_STRUCTURES).length > 0) return true
+  if (this.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
+}
