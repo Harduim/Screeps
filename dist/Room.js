@@ -110,7 +110,7 @@ Room.prototype.census = function (creepsOwned) {
   }
 
   if (this.name === 'sim') {
-    this.memory.harvMax = 3
+    this.memory.harvMax = 7
     this.memory.upgrMax = 2
   }
 }

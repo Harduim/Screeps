@@ -32,7 +32,7 @@ Room.prototype.addHighway = function (homePos, remotePos) {
   return true
 }
 
-Room.prototype.buildHway = function (HwayId) {
+Room.prototype.buildHway = function (HwayId, dryrun = true) {
   const laneKey = `Highways.${HwayId}`
   const lane = _.get(this.memory, laneKey, false)
   if (!lane) {
@@ -40,8 +40,11 @@ Room.prototype.buildHway = function (HwayId) {
   }
   let step
   for (step of lane) {
-    // this.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
-    Game.rooms[step.roomName].createFlag(step.x, step.y, `${HwayId}_${step.x}${step.y}`)
+    if (dryrun) {
+      Game.rooms[step.roomName].createFlag(step.x, step.y, `${HwayId}_${step.x}${step.y}`)
+    } else {
+      Game.rooms[step.roomName].createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
+    }
   }
 }
 
@@ -51,18 +54,22 @@ Room.prototype.removeFlags = function (prefix) {
 
 /*
 Reset roads
-Game.rooms['W8S17'].cleanHways()
+Game.rooms['sim'].cleanHways()
 
+1917 / 2317
 Reset flags
-Game.rooms['W8S17'].removeFlags('146')
-Game.rooms['W8S17'].buildHway('146')
+Game.rooms['sim'].removeFlags('1917')
+Game.rooms['sim'].buildHway('51', false)
 
 Test road
-Game.rooms['W8S17'].addHighway('5fe61bfdc1ac9af95e162e4c', '5bbcac649099fc012e63562f')
+Game.rooms['sim'].addHighway('d7500ca4714c1dec7d28e0e5', '2de11bcdd869b2908d0a87b3')
+Game.rooms['sim'].addHighway('35dcbcc5b80460e55dec340e', 'fc24fd3ebd41b434e985ba3a')
 
 Test creep
-Game.spawns['Spawn8'].easySpawnCreep({role: 'truck', body: [MOVE, MOVE, CARRY, CARRY]})
+Game.spawns['Spawn1'].easySpawnCreep({role: 'truck', body: [MOVE, MOVE, MOVE, CARRY, CARRY, WORK]})
 
-Game.spawns['Spawn8'].easySpawnCreep({role: 'srharv', body: [MOVE, MOVE, CARRY, WORK, WORK]})
+Game.spawns['Spawn1'].easySpawnCreep({role: 'srharv', body: [MOVE, MOVE, CARRY, WORK, WORK]})
+
+Game.spawns['Spawn1'].easySpawnCreep({role: 'srharv', body: [MOVE, MOVE, MOVE, MOVE, CARRY, WORK, WORK, WORK, WORK]})
 
 */

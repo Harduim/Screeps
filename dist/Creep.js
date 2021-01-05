@@ -58,29 +58,48 @@ function allowedStorages (storages) {
   return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
+Creep.prototype.passingRepair = function () {
+  const allowed = [STRUCTURE_ROAD, STRUCTURE_CONTAINER]
+  const damaged = this.pos.findInRange(
+    FIND_STRUCTURES, 1, { filter: (strc) => allowed.includes(strc.structureType) && strc.hits < strc.hitsMax }
+  )
+  if (damaged.length > 0) this.repair(damaged[0])
+}
+
 Creep.prototype.roleEuroTruck = function () {
-  const road = Game.rooms[this.memory.default_room].getHighway(146)
+  const road = Game.rooms[this.memory.default_room].getHighway(51)
+  if (!this.memory.direction) this.memory.direction = 'out'
+
   if (!road) {
     log(`[${this.room.name}]${this.name}:No road found`, LOG_WARN, 'HIGHWAYS')
     return
   }
   let action, dest
-  if (this.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+  if (this.memory.direction === 'out') {
     action = 'withdraw'
     dest = road[road.length - 1]
   } else {
+    if (Game.time % 2 === 0) this.passingRepair()
     action = 'transfer'
     dest = road[0]
   }
 
   dest = new RoomPosition(dest.x, dest.y, dest.roomName)
   if (this.pos.inRangeTo(dest, 2)) {
-    const target = this.room.lookForAtArea(
+    let target = this.room.lookForAtArea(
       LOOK_STRUCTURES, dest.y - 1, dest.x - 1, dest.y + 1, dest.x + 1, true
     )
-    if (target.length > 0) this[action](target[0].structure, RESOURCE_ENERGY)
+    target = _.filter(target, trg => trg.structure.store)
+    if (target.length > 0 && this[action](target[0].structure, RESOURCE_ENERGY) === OK) {
+      if (this.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+        this.memory.direction = 'in'
+      } else {
+        this.memory.direction = 'out'
+        this.say('Here I go again on my own...')
+      }
+    }
   }
-  this.moveTo(dest, { reusePath: 100 })
+  this.moveTo(dest, { reusePath: 100, ignoreCreeps: true })
 }
 
 Creep.prototype.lookArround = function (lookType) {
@@ -95,7 +114,7 @@ Creep.prototype.roleStaticRharv = function () {
   const rPos = this.memory.remotePos
   if (!rPos) {
     // DEV GAMBI
-    this.memory.remotePos = { x: 14, y: 7, roomName: 'W9S17' }
+    this.memory.remotePos = { x: 5, y: 2, roomName: 'sim' }
     return
   }
 
