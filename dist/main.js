@@ -7,6 +7,7 @@ require('overrides')
 require('Highways')
 require('RoomPlanner')
 require('RoomPosition')
+require('LogisticQueue')
 
 const log = require('logger')
 const SpawnQueue = require('SpawnQueue')
