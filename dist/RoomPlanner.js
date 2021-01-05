@@ -214,7 +214,7 @@ Room.prototype.buildBaseRoads = function () {
   if (this.memory.baseRoads) return
   const bc = this.memory.baseCenter
   let pos
-  for (pos of BASE_LAYOUT[road]) {
+  for (pos of BASE_LAYOUT.road) {
     this.createConstructionSite(pos.x + bc.x, pos.y + bc.y, STRUCTURE_ROAD)
   }
   this.memory.baseRoads = true

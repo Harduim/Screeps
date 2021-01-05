@@ -268,7 +268,7 @@ Room.prototype.runTowers = function () {
     }
   }
 
-  if (Game.time % 15 === 0) {
+  if (Game.time % (this.controller.level * 2) === 0) {
     const strucWallRampart = [STRUCTURE_WALL, STRUCTURE_RAMPART]
     const lessHits = obj => _.reduce(obj, (a, b) => a.hits <= b.hits ? a : b)
 
