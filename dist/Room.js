@@ -109,11 +109,6 @@ Room.prototype.census = function (creepsOwned) {
     this.memory.builMax = 1
     this.memory.maxBasicSize = 2200
   }
-
-  if (this.name === 'sim') {
-    this.memory.harvMax = 7
-    this.memory.upgrMax = 2
-  }
 }
 
 Room.prototype.structureCensus = function (structs) {

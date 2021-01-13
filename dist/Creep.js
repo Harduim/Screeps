@@ -58,6 +58,11 @@ function allowedStorages (storages) {
   return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
+Creep.prototype.roleStaticHarv = function () {
+  return 0
+}
+
+
 Creep.prototype.passingRepair = function () {
   const allowed = [STRUCTURE_ROAD, STRUCTURE_CONTAINER]
   const damaged = this.pos.findInRange(

@@ -1,11 +1,11 @@
 // To do: https://make.wordpress.org/core/handbook/best-practices/inline-documentation-standards/javascript/
 
 class SpawnQueue {
-  constructor () {
+  constructor() {
     if (!Memory.SpawnQueue) this.cleanQueue()
   }
 
-  addCreep ({
+  addCreep({
     roomName = 'any',
     role = 'role',
     energy = 0,
@@ -23,17 +23,17 @@ class SpawnQueue {
     roomQ.sort((a, b) => b.priority - a.priority)
   }
 
-  getCreep (roomName = 'any') {
+  getCreep(roomName = 'any') {
     const protoCreep = this.getRoomQueue(roomName).pop()
     if (protoCreep) log(`Popping creep from queue: ${JSON.stringify(protoCreep)}`, LOG_DEBUG, roomName)
     return protoCreep
   }
 
-  getQueue () {
+  getQueue() {
     return Memory.SpawnQueue
   }
 
-  getRoomQueue (roomName = 'any') {
+  getRoomQueue(roomName = 'any') {
     const SpawnQ = this.getQueue()
     if (!SpawnQ[roomName]) {
       SpawnQ[roomName] = []
@@ -41,18 +41,18 @@ class SpawnQueue {
     return SpawnQ[roomName]
   }
 
-  getCountByRole (role, roomName = 'any') {
+  getCountByRole(role, roomName = 'any') {
     const roomQ = this.getRoomQueue(roomName)
     const roleQ = roomQ.filter(qed => qed.role === role)
     return roleQ.length
   }
 
-  cleanQueue () {
+  cleanQueue() {
     log('Initializing spawn queue', LOG_INFO)
     Memory.SpawnQueue = {}
   }
 
-  bodyBuilder (energyCap, carryFactor = 600, workFactor = 1.8) {
+  bodyBuilder(energyCap, carryFactor = 600, workFactor = 1.8) {
     const carrCount = Math.ceil(energyCap / carryFactor)
     const workCount = Math.floor(Math.floor(energyCap / workFactor) / 100)
     const moveCount = Math.floor((energyCap - ((carrCount * 50) + (workCount * 100))) / 50)
@@ -66,7 +66,26 @@ class SpawnQueue {
     return bodyPts // Está saindo da jaula o monstro!
   }
 
-  queueToString (roomName = 'any') {
+  dnaBuilder(energyCap, template) {
+    if (template.length > 50) {
+      log("Numero de partes > 50", LOG_ERROR)
+      return ERR_INVALID_ARGS
+    }
+    const bodyPts = []
+    let cost = 0
+    let i = 0
+    let part
+    while (cost < energyCap) {
+      part = template[i]
+      cost = cost + BODYPART_COST[part]
+      bodyPts.push(part)
+      i = template.length -1 === i ? 0 : i + 1
+    }
+
+    return bodyPts
+  }
+
+  queueToString(roomName = 'any') {
     const roomQ = this.getRoomQueue(roomName)
     let msg = ''
     let pc
@@ -74,7 +93,7 @@ class SpawnQueue {
     return msg === '' ? '[]' : msg
   }
 
-  toString () {
+  toString() {
     return JSON.stringify(this.getQueue())
   }
 }
