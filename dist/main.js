@@ -1,12 +1,14 @@
 require('Config')
-require('Room')
 require('Spawn')
 require('StructureTower')
 require('overrides')
 require('Highways')
 require('RoomPlanner')
-require('RoomPosition')
+require('RoomPositionPrototype')
 require('LogistiQueue')
+
+require('Room')
+require('RoomPrototype')
 
 require('Creep')
 require('CreepPrototype')
