@@ -1,4 +1,5 @@
-require('Config')
+require('Global')
+
 require('Spawn')
 require('StructureTower')
 require('overrides')
@@ -18,7 +19,7 @@ require('CreepRoleBuilder')
 
 
 
-const log = require('logger')
+const log = require('Logger')
 const SpawnQueue = require('SpawnQueue')
 
 function every300Ticks () {
