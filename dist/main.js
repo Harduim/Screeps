@@ -16,7 +16,7 @@ require('CreepPrototype')
 require('CreepRoleHarvester')
 require('CreepRoleUpgrader')
 require('CreepRoleBuilder')
-
+require('CreepRoleEuroTruck')
 
 
 const log = require('Logger')
