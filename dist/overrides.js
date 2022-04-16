@@ -1,7 +1,3 @@
-Creep.prototype.toString = function () {
-  return `[${this.name}] Role:${this.memory.role} Room:${this.room.name}`
-}
-
 Room.prototype.toString = function () {
   return JSON.stringify(this)
 }

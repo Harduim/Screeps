@@ -1,16 +1,9 @@
-require('WarCreep')
-
 const REUSEPATHARGS = { reusePath: 6 }
 
 Creep.prototype.run = function () {
   if (this.spawning && Game.time % 10 === 0) {
     log(`${this.name}`, LOG_INFO, this.room.name)
     return
-  }
-
-  if (ARMYROLES.includes(this.memory.role)) {
-    this.memory.ARMYROLES = ARMYROLES
-    return this.roleArmy()
   }
 
   if (this.memory.relocate) {
@@ -58,19 +51,6 @@ function allowedStorages (storages) {
   return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
-Creep.prototype.roleStaticHarv = function () {
-  return 0
-}
-
-
-Creep.prototype.passingRepair = function () {
-  const allowed = [STRUCTURE_ROAD, STRUCTURE_CONTAINER]
-  const damaged = this.pos.findInRange(
-    FIND_STRUCTURES, 1, { filter: (strc) => allowed.includes(strc.structureType) && strc.hits < strc.hitsMax }
-  )
-  if (damaged.length > 0) this.repair(damaged[0])
-}
-
 Creep.prototype.roleEuroTruck = function () {
   const road = Game.rooms[this.memory.default_room].getHighway(51)
   if (!this.memory.direction) this.memory.direction = 'out'
@@ -107,13 +87,6 @@ Creep.prototype.roleEuroTruck = function () {
   this.moveTo(dest, { reusePath: 100, ignoreCreeps: true })
 }
 
-Creep.prototype.lookArround = function (lookType) {
-  const target = this.room.lookForAtArea(
-    lookType, this.pos.y - 1, this.pos.x - 1, this.pos.y + 1, this.pos.x + 1, true
-  )
-  const objPath = `[0].${lookType}.id`
-  return _.get(target, objPath, false)
-}
 
 Creep.prototype.roleStaticRharv = function () {
   const rPos = this.memory.remotePos
@@ -371,22 +344,6 @@ Creep.prototype.roleRemoteHarvester = function () {
   }
 }
 
-Creep.prototype.roleHarvester = function () {
-  if (this.memory.harvesting) return this.goHarvest()
-
-  if (!this.memory.goingTo) {
-    const closeLink = this.pos.findInRange(FIND_MY_STRUCTURES, 2, {
-      filter: strc => (strc.structureType === STRUCTURE_LINK && strc.store.energy < 795)
-    })
-
-    if (closeLink.length > 0 && (this.room.memory.censusByPrefix.linker || 0) > 0) {
-      this.memory.goingTo = closeLink[0].id
-    }
-  }
-
-  return this.goDeposit()
-}
-
 function storageFilter (strc) {
   let aStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN]
   if (strc.room.energyAvailable === strc.room.energyCapacityAvailable) {
@@ -404,38 +361,6 @@ Creep.prototype.roleSeeder = function roleSeeder () {
   return this.roleHarvester()
 }
 
-Creep.prototype.roleBuilder = function () {
-  if (this.memory.building) return this.goBuild()
-
-  if (!this.memory.building && this.store.getFreeCapacity() === 0) {
-    this.memory.building = true
-    this.say('🚧 build')
-    return this.goBuild()
-  }
-  if (this.room.storage && this.room.storage.store.energy > 1000) return this.goWithdraw()
-
-  return this.goHarvest()
-}
-
-Creep.prototype.roleUpgrader = function () {
-  const originalRole = this.name.split('_')[0]
-  if (originalRole !== 'upgr' && this.store[RESOURCE_ENERGY] === 0) {
-    this.memory.role = originalRole
-    return
-  }
-  if (this.memory.upgrading && this.store[RESOURCE_ENERGY] === 0) this.memory.upgrading = false
-  if (!this.memory.upgrading && this.store.getFreeCapacity() === 0) this.memory.upgrading = true
-
-  const ctrl = Game.getObjectById(this.memory.default_controller)
-  if (this.memory.upgrading) {
-    if (this.upgradeController(ctrl) === ERR_NOT_IN_RANGE) this.moveTo(ctrl, { visualizePathStyle: { stroke: '#ffffff' } })
-    return
-  }
-  if (this.room.storage && this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 50000) {
-    return this.goWithdraw()
-  }
-  return this.goHarvest()
-}
 
 Creep.prototype.goDeposit = function (storFilter = storageFilter) {
   if (this.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
@@ -562,11 +487,4 @@ Creep.prototype.callReinforcements = function (role = 'grunt', limit = 1, energy
       memory: { squad: squad }
     }
   )
-}
-
-Creep.prototype.shouldFlee = function (range = 5) {
-  if (this.hits < this.hitsMax || this.pos.findInRange(FIND_HOSTILE_CREEPS, range).length > 0) {
-    return true
-  }
-  return false
 }

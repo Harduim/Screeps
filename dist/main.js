@@ -1,13 +1,20 @@
 require('Config')
 require('Room')
 require('Spawn')
-require('Creep')
 require('StructureTower')
 require('overrides')
 require('Highways')
 require('RoomPlanner')
 require('RoomPosition')
 require('LogistiQueue')
+
+require('Creep')
+require('CreepPrototype')
+require('CreepRoleHarvester')
+require('CreepRoleUpgrader')
+require('CreepRoleBuilder')
+
+
 
 const log = require('logger')
 const SpawnQueue = require('SpawnQueue')
