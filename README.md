@@ -70,3 +70,8 @@ your units' AI. You control your colony by writing JavaScript.
 - Find a better code formatter
 - Figure out a way to integrate some profiler
 - Benchmark energy efficiency of different logistics models
+
+
+## Project Structure
+
+Using a sort of [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation) on filenames because the game does not allow the use of sub-folders.
