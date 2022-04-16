@@ -2,7 +2,6 @@ require('Global')
 
 require('Spawn')
 require('StructureTower')
-require('overrides')
 require('Highways')
 require('RoomPlanner')
 require('RoomPositionPrototype')
@@ -18,13 +17,15 @@ require('CreepRoleUpgrader')
 require('CreepRoleBuilder')
 require('CreepRoleEuroTruck')
 
+require('SourcePrototype')
+
 
 const log = require('Logger')
-const SpawnQueue = require('SpawnQueue')
+const SpawnQueue = require('FeatureSpawnQueue')
 
 function every300Ticks () {
   if (Game.time % 300 !== 0) { return }
-  log('Runnig 300 Tks Maintenance', LOG_DEBUG)
+  log('Running 300 Tks Maintenance', LOG_DEBUG)
   balanceCreeps()
 
   let name

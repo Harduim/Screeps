@@ -1,5 +1,3 @@
-// To do: https://make.wordpress.org/core/handbook/best-practices/inline-documentation-standards/javascript/
-
 class SpawnQueue {
   constructor() {
     if (!Memory.SpawnQueue) this.cleanQueue()

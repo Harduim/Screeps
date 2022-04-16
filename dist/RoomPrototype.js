@@ -9,3 +9,8 @@ Room.prototype.creepFilterByRole = function (role, creepList) {
 Room.prototype.creepFilterByPrefix = function (prefix, creepList) {
     return _.filter(creepList, crp => crp.name.split('_')[0] === prefix)
 }
+
+Room.prototype.toString = function () {
+    return JSON.stringify(this)
+  }
+  

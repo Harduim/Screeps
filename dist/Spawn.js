@@ -123,3 +123,7 @@ Spawn.prototype.fighterBodyBuilder = function fighterBodyBuilder (role, energyCa
 
   return bodyPts
 }
+
+Spawn.prototype.toString = function () {
+  return `[${this.name}] Room:${this.room.name} Energy:${this.room.energyAvailable}/${this.room.energyCapacityAvailable}`
+}
