@@ -22,28 +22,13 @@ require('SourcePrototype')
 
 const log = require('Logger')
 const SpawnQueue = require('FeatureSpawnQueue')
-
-function every300Ticks () {
-  if (Game.time % 300 !== 0) { return }
-  log('Running 300 Tks Maintenance', LOG_DEBUG)
-  balanceCreeps()
-
-  let name
-  for (name in Memory.creeps) {
-    if (!Game.creeps[name]) {
-      delete Memory.creeps[name]
-    }
-  }
-}
-
-function balanceCreeps () {
-  _.forEach(Game.creeps, function (crp) { crp.memory.role = crp.name.split('_')[0] })
-}
+const scheduler = require('FeatureScheduler')
+const maintenanceTasks = require('FeatureMaintenance')
 
 module.exports.loop = function () {
   global.log = log
   global.SpawnQueue = new SpawnQueue()
-  every300Ticks()
+  scheduler(maintenanceTasks)
 
   if (Game.cpu.bucket < 500) {
     log('Extremely low bucket - skipping loop', LOG_FATAL)

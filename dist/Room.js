@@ -18,18 +18,6 @@ Room.prototype.run = function run () {
   )
 }
 
-Room.prototype.storEnergy = function () {
-  if (!this.storage) return 0
-  return this.storage.store.getUsedCapacity(RESOURCE_ENERGY)
-}
-
-Room.prototype.nameToInt = function () {
-  const nums = []
-  let c
-  for (c of this.name) nums.push(c.charCodeAt(0))
-  return nums.join('')
-}
-
 Room.prototype.testFunc = function (arg = '!arg', arg2 = '!arg2', arg3 = '!arg3') {
   log(`testFunc args: ${arg}|${arg2}|${arg3}`, LOG_FATAL, this.name)
 }
