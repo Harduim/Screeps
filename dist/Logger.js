@@ -1,6 +1,3 @@
-// Adapted from https://github.com/ScreepsQuorum/screeps-quorum/blob/master/src/qos/logger.js
-'use strict'
-
 global.LOG_FATAL = 5
 global.LOG_ERROR = 4
 global.LOG_WARN = 3
