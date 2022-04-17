@@ -160,15 +160,12 @@ Room.prototype.drawSquare = function (x = 25, y = 25, squareSize = 9) {
 }
 
 Room.prototype.drawBaseLayout = function (x = 25, y = 25) {
-  this.removeFlags('l')
-  let crds
-  for (crds of BASE_LAYOUT.road) {
-    // this.createFlag(crds.x + x, crds.y + y, `l_${crds.x}${crds.y}`, COLOR_GREY)
-    this.visual.circle(crds.x + x, crds.y + y)
+  let coordinates
+  for (coordinates of BASE_LAYOUT.road) {
+    this.visual.circle(coordinates.x + x, coordinates.y + y)
   }
-  for (crds of BASE_LAYOUT.spawn) {
-    // this.createFlag(crds.x + x, crds.y + y, `l_${crds.x}${crds.y}`, COLOR_RED)
-    this.visual.circle(crds.x + x, crds.y + y, { stroke: COLOR_RED })
+  for (coordinates of BASE_LAYOUT.spawn) {
+    this.visual.circle(coordinates.x + x, coordinates.y + y, { stroke: COLOR_RED })
   }
 }
 

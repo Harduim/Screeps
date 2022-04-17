@@ -32,8 +32,11 @@ const log = require('Logger')
 const SpawnQueue = require('FeatureSpawnQueue')
 const scheduler = require('FeatureScheduler')
 const maintenanceTasks = require('FeatureMaintenance')
+const ci = require('ConsoleInterface')
+
 
 module.exports.loop = function () {
+  global.ci = ci
   global.log = log
   global.SpawnQueue = new SpawnQueue()
   scheduler(maintenanceTasks)

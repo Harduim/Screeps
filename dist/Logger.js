@@ -5,6 +5,10 @@ global.LOG_INFO = 2
 global.LOG_DEBUG = 1
 global.LOG_TRACE = 0
 
+global.LOG_DEFAULT = LOG_WARN
+global.LOG_DEFAULT_GROUP = 'default'
+
+
 const ERROR_COLORS = {
   5: '#ff0066',
   4: '#e65c00',
@@ -15,13 +19,13 @@ const ERROR_COLORS = {
   highlight: '#ffff00'
 }
 
-function log (message, severity = 3, group = 'default', tags = []) {
-  message = group !== 'default' ? `[${group}]: ${message}` : `[${message}]`
+function log (message, severity = LOG_DEFAULT, group = LOG_DEFAULT_GROUP, tags = []) {
+  message = group !== LOG_DEFAULT_GROUP ? `[${group}]: ${message}` : `[${message}]`
 
-  if (!Memory.loglevel) Memory.loglevel = {}
-  const loglevel = Memory.loglevel
-  if (!loglevel[group]) loglevel[group] = LOG_INFO
-  if (loglevel[group] > severity) return
+  if (!Memory.logLevel) Memory.logLevel = {}
+  const logLevel = Memory.logLevel
+  if (!logLevel[group]) logLevel[group] = LOG_INFO
+  if (logLevel[group] > severity) return
 
   let attributes = ''
 
