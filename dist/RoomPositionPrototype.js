@@ -40,3 +40,12 @@ RoomPosition.prototype.closestDamagedStructure = function () {
     { filter: (structure) => (structure.hits < structure.hitsMax) && (structure.hits <= 40000) }
   )
 }
+
+
+RoomPosition.prototype.isLinkNearby = function () {
+  return this.findInRange(
+    FIND_MY_STRUCTURES,
+    3,
+    { filter: structure => (structure.structureType === STRUCTURE_LINK && structure.store.energy < 795) }
+  )
+}
