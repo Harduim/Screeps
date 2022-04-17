@@ -19,7 +19,6 @@ require('CreepRoleEuroTruck')
 
 require('SourcePrototype')
 
-
 const log = require('Logger')
 const SpawnQueue = require('FeatureSpawnQueue')
 const scheduler = require('FeatureScheduler')
@@ -35,6 +34,7 @@ module.exports.loop = function () {
     return
   }
 
-  _.invoke(Game.rooms, 'run')
-  _.invoke(Game.creeps, 'run')
+  try { _.invoke(Game.rooms, 'run') } catch (e) { log(e, LOG_FATAL) }
+  try { _.invoke(Game.creeps, 'run') } catch (e) { log(e, LOG_FATAL) }
+
 }

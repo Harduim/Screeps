@@ -13,41 +13,45 @@ Creep.prototype.run = function () {
       this.memory.relocate = false
     }
   }
-  switch (this.memory.role) {
-    case 'buil':
-      return this.roleBuilder()
-    case 'harv':
-      return this.roleHarvester()
-    case 'upgr':
-      return this.roleUpgrader()
-    case 'claim':
-      return this.roleClaimer()
-    case 'rharv':
-      return this.roleRemoteHarvester()
-    case 'buff':
-      return this.roleBuff()
-    case 'loot':
-      return this.roleLooter()
-    case 'seed':
-      return this.roleSeeder()
-    case 'migr':
-      return this.roleMigrate()
-    case 'truck':
-      return this.roleEuroTruck()
-    case 'linker':
-      return this.roleLinker()
-    case 'grave':
-      return this.roleGrave()
-    case 'mason':
-      return this.roleMason()
-    case 'trader':
-      return this.roleTrader()
-    case 'srharv':
-      return this.roleStaticRharv()
+  try {
+    switch (this.memory.role) {
+      case 'buil':
+        return this.roleBuilder()
+      case 'harv':
+        return this.roleHarvester()
+      case 'upgr':
+        return this.roleUpgrader()
+      case 'claim':
+        return this.roleClaimer()
+      case 'rharv':
+        return this.roleRemoteHarvester()
+      case 'buff':
+        return this.roleBuff()
+      case 'loot':
+        return this.roleLooter()
+      case 'seed':
+        return this.roleSeeder()
+      case 'migr':
+        return this.roleMigrate()
+      case 'truck':
+        return this.roleEuroTruck()
+      case 'linker':
+        return this.roleLinker()
+      case 'grave':
+        return this.roleGrave()
+      case 'mason':
+        return this.roleMason()
+      case 'trader':
+        return this.roleTrader()
+      case 'srharv':
+        return this.roleStaticRharv()
+    }
+  } catch (error) {
+    log(error, LOG_FATAL)
   }
 }
 
-function allowedStorages (storages) {
+function allowedStorages(storages) {
   return strc => storages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
@@ -307,7 +311,7 @@ Creep.prototype.roleRemoteHarvester = function () {
   }
 }
 
-function storageFilter (strc) {
+function storageFilter(strc) {
   let aStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN]
   if (strc.room.energyAvailable === strc.room.energyCapacityAvailable) {
     aStorages = [STRUCTURE_EXTENSION, STRUCTURE_SPAWN, STRUCTURE_TOWER, STRUCTURE_STORAGE]
@@ -315,7 +319,7 @@ function storageFilter (strc) {
   return aStorages.includes(strc.structureType) && strc.store.getFreeCapacity(RESOURCE_ENERGY) > 0
 }
 
-Creep.prototype.roleSeeder = function roleSeeder () {
+Creep.prototype.roleSeeder = function roleSeeder() {
   if (!this.room.controller || this.room.controller.id !== this.memory.default_controller) {
     return this.moveTo(Game.getObjectById(this.memory.default_controller))
   }
