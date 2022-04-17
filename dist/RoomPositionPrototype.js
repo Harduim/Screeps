@@ -10,11 +10,11 @@ RoomPosition.prototype.getAdjacent = function () {
       if (x !== this.x || y !== this.y) {
         positions.push(new RoomPosition(x, y, this.roomName))
       }
-    } // y for loop
-  } // X for loop
+    }
+  }
 
   return positions
-} // getNerby
+}
 
 RoomPosition.prototype.isWallAdjacent = function () {
   const nearby = this.getAdjacent()
@@ -32,4 +32,11 @@ RoomPosition.prototype.isWallAdjacent = function () {
 RoomPosition.prototype.isOccupied = function () {
   if (this.lookFor(LOOK_STRUCTURES).length > 0) return true
   if (this.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) return true
+}
+
+RoomPosition.prototype.closestDamagedStructure = function () {
+  return this.findClosestByRange(
+    FIND_STRUCTURES,
+    { filter: (structure) => (structure.hits < structure.hitsMax) && (structure.hits <= 40000) }
+  )
 }

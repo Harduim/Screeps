@@ -10,9 +10,7 @@ StructureTower.prototype.run = function run () {
   if (closestMyCreep && Game.time % 2 === 0 && this.pos.getRangeTo(closestMyCreep) < 20) {
     return this.heal(closestMyCreep)
   }
-  const closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
-    filter: (structure) => (structure.hits < structure.hitsMax) && (structure.hits <= 40000)
-  })
+  const closestDamagedStructure = this.pos.closestDamagedStructure()
   if (closestDamagedStructure && Game.time % 5 === 0) {
     return this.repair(closestDamagedStructure)
   }
