@@ -1,0 +1,9 @@
+name: screeps
+channels:
+  - defaults
+  - plotly
+dependencies:
+  - python=3.9
+  - plotly
+  - pandas
+  - nbformat
