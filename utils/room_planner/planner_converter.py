@@ -1,5 +1,8 @@
 """Tool for converting layouts from https://screeps.dissi.me/ into relative coordinates"""
 
+
+# TODO: take a look at this https://screeps.admon.dev/building-planner
+
 from json import loads, dumps
 
 SITE_JSON = "raw_layout.json"
