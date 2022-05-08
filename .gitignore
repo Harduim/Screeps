@@ -3,3 +3,4 @@ Gruntfile.js
 test.js
 .vscode
 *.json
+.trash
